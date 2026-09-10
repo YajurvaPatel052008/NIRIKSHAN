@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+python-multipart
+opencv-python
+paddleocr
+groq
+supabase
+reportlab
+python-dotenv
