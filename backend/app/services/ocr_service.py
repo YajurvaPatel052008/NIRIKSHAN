@@ -13,6 +13,7 @@ import numpy as np
 # PaddlePaddle 3.x can select oneDNN on Linux builds where the PIR runtime
 # does not support every attribute emitted by the current OCR detector.
 os.environ.setdefault("FLAGS_use_mkldnn", "0")
+os.environ.setdefault("PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK", "True")
 
 from paddleocr import PaddleOCR
 
@@ -24,6 +25,8 @@ logger = logging.getLogger(__name__)
 try:
     OCR_ENGINE = PaddleOCR(
         lang="en",
+        text_detection_model_name="PP-OCRv5_mobile_det",
+        text_recognition_model_name="PP-OCRv5_mobile_rec",
         use_doc_orientation_classify=False,
         use_doc_unwarping=False,
         use_textline_orientation=False,
