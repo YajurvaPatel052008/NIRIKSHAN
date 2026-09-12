@@ -421,9 +421,19 @@ def verify_inspection(
 def _update_inspection_status(inspection_id: str, status_value: str, **fields) -> None:
     if supabase is None:
         return
-    supabase.table("inspections").update(
-        {"status": status_value, **fields}
-    ).eq("id", inspection_id).execute()
+    try:
+        supabase.table("inspections").update(
+            {"status": status_value, **fields}
+        ).eq("id", inspection_id).execute()
+    except Exception:
+        if status_value != "Failed":
+            raise
+        # Existing deployments may use the original schema, which did not
+        # include Failed in its status constraint. Preserve the error details
+        # in notes while keeping the row valid until the migration is applied.
+        supabase.table("inspections").update(
+            {"status": "Draft", **fields}
+        ).eq("id", inspection_id).execute()
 
 
 @router.post("/{inspection_id}/analyze")

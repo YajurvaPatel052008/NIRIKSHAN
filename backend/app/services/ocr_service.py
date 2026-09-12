@@ -2,12 +2,18 @@
 
 from __future__ import annotations
 
+import os
 import logging
 import json
 from pathlib import Path
 from typing import Any
 
 import numpy as np
+
+# PaddlePaddle 3.x can select oneDNN on Linux builds where the PIR runtime
+# does not support every attribute emitted by the current OCR detector.
+os.environ.setdefault("FLAGS_use_mkldnn", "0")
+
 from paddleocr import PaddleOCR
 
 logger = logging.getLogger(__name__)
@@ -16,9 +22,15 @@ logger = logging.getLogger(__name__)
 # free tier this can add cold-start latency; consider pre-warming with a blank
 # image during FastAPI startup via an `@app.on_event("startup")` handler.
 try:
-    OCR_ENGINE = PaddleOCR(use_angle_cls=True, lang="en")
+    OCR_ENGINE = PaddleOCR(
+        lang="en",
+        use_doc_orientation_classify=False,
+        use_doc_unwarping=False,
+        use_textline_orientation=False,
+        enable_mkldnn=False,
+    )
 except (TypeError, ValueError):
-    # PaddleOCR 3.x removed some 2.x constructor options.
+    # Keep the latest PaddleOCR runtime while supporting minor API changes.
     OCR_ENGINE = PaddleOCR(lang="en")
 
 
