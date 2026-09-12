@@ -5,12 +5,11 @@ pydantic
 pydantic-settings
 PyJWT
 python-dotenv
-opencv-python-headless==4.6.0.66
-imgaug==0.4.0
-paddleocr==2.7.0.3
-paddlepaddle==2.6.2
+opencv-python-headless
+paddleocr==3.7.0
+paddlepaddle==3.3.1
 groq
 supabase
 reportlab
 pillow
-numpy==1.26.4
+numpy
