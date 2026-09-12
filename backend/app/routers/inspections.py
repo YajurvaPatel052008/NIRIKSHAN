@@ -439,7 +439,9 @@ def analyze_inspection(
         )
 
     processing_started = False
+    current_stage = "loading inspection"
     try:
+        current_stage = "loading inspection"
         inspection_response = (
             supabase.table("inspections")
             .select("*")
@@ -469,9 +471,11 @@ def analyze_inspection(
             )
         inspection_image = image_response.data[0]
 
+        current_stage = "downloading inspection image"
         image_bytes = supabase.storage.from_("inspection-images").download(
             inspection_image["storage_path"]
         )
+        current_stage = "checking image quality"
         image = cv_service.load_image(image_bytes)
         quality = cv_service.check_quality(image)
         if not quality["overall_pass"]:
@@ -490,9 +494,11 @@ def analyze_inspection(
 
         _update_inspection_status(inspection_id, "Processing")
         processing_started = True
+        current_stage = "enhancing image"
         processed_image = cv_service.correct_perspective(
             cv_service.enhance_image(image)
         )
+        current_stage = "extracting text with PaddleOCR"
         raw_ocr_lines = ocr_service.extract_text(processed_image)
         if not raw_ocr_lines:
             _update_inspection_status(
@@ -504,11 +510,13 @@ def analyze_inspection(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="No readable label text was detected. Retake the photo with the label closer and in focus.",
             )
+        current_stage = "classifying declarations with Groq"
         declarations = groq_service.classify_declarations(
             raw_ocr_lines,
             inspection["category"],
         )
 
+        current_stage = "saving declarations"
         supabase.table("extracted_declarations").delete().eq(
             "inspection_id", inspection_id
         ).execute()
@@ -542,6 +550,7 @@ def analyze_inspection(
         else:
             persisted_declarations = []
 
+        current_stage = "running compliance rules"
         compliance = rule_engine.run_compliance_check(
             declarations,
             inspection["category"],
@@ -569,6 +578,7 @@ def analyze_inspection(
             }
             for violation in violations
         ]
+        current_stage = "saving violations"
         if violation_rows:
             inserted_violations = (
                 supabase.table("violations")
@@ -579,6 +589,7 @@ def analyze_inspection(
         else:
             stored_violations = []
 
+        current_stage = "attaching evidence"
         evidence_violations = evidence_service.attach_evidence_to_violations(
             stored_violations,
             persisted_declarations,
@@ -593,6 +604,7 @@ def analyze_inspection(
                     .execute()
                 )
 
+        current_stage = "finalizing inspection"
         _update_inspection_status(
             inspection_id,
             "Completed",
@@ -622,12 +634,12 @@ def analyze_inspection(
             _update_inspection_status(
                 inspection_id,
                 "Failed",
-                notes=f"Analysis failed: {exc}",
+                notes=f"Analysis failed during {current_stage}: {exc}",
             )
         except Exception:
             # Preserve the original pipeline error if the status update also fails.
             pass
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Inspection analysis failed.",
+            detail=f"Inspection analysis failed during {current_stage}.",
         ) from exc

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import json
 from pathlib import Path
 from typing import Any
 
@@ -66,7 +67,10 @@ def _read_v3_result(raw_result: Any) -> list[dict]:
     """Read PaddleOCR 3.x result objects or dictionaries."""
     data = raw_result.json if hasattr(raw_result, "json") else raw_result
     if isinstance(data, str):
-        return []
+        try:
+            data = json.loads(data)
+        except json.JSONDecodeError:
+            return []
     if isinstance(data, list):
         if len(data) == 1:
             data = data[0]
