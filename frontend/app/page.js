@@ -17,11 +17,12 @@ import {
   Menu,
   ScanLine,
   SearchCheck,
-  ShieldCheck,
+  Eye,
   Upload,
   UserCheck,
   X,
 } from "lucide-react";
+import BrandLogo from "../components/brand-logo";
 
 const steps = [
   {
@@ -85,13 +86,13 @@ const benefits = [
 
 function Logo({ compact = false }) {
   return (
-    <a className="flex items-center gap-3" href="#home" aria-label="NIRIKSHA home">
+    <a className="flex items-center gap-3" href="#home" aria-label="NIRIKSHAN home">
       <span className="flex size-10 items-center justify-center rounded-lg bg-[#0f3d63] text-white shadow-sm">
-        <ShieldCheck size={22} strokeWidth={1.8} />
+        <BrandLogo className="h-9 w-10" />
       </span>
       <span className="leading-none">
         <span className="block text-[17px] font-bold tracking-[0.14em] text-[#0f3d63]">
-          NIRIKSHA
+          NIRIKSHAN
         </span>
         {!compact && (
           <span className="mt-1 block text-[9px] font-medium uppercase tracking-[0.18em] text-slate-500">
@@ -161,7 +162,7 @@ export default function Home() {
               Compliance.
             </h1>
             <p className="mt-7 max-w-xl text-base leading-7 text-slate-600 sm:text-lg">
-              NIRIKSHA is an AI-powered platform that helps enforcement officers
+              NIRIKSHAN is an AI-powered platform that helps enforcement officers
               check packaged commodity labels against the Legal Metrology
               (Packaged Commodities) Rules, 2011.
             </p>
@@ -207,8 +208,8 @@ export default function Home() {
                 <div className="scan-beam absolute left-0 top-0 z-10 h-0.5 w-full bg-[#168cae] shadow-[0_0_14px_3px_rgba(22,140,174,0.45)]" />
                 <div className="relative w-[190px] rotate-[-5deg] rounded-md border border-slate-300 bg-white p-3 shadow-xl sm:w-[220px]">
                   <div className="flex h-6 items-center gap-2 rounded bg-[#0f3d63] px-2">
-                    <ShieldCheck size={12} className="text-white" />
-                    <span className="text-[8px] font-bold tracking-[0.14em] text-white">NIRIKSHA SAMPLE</span>
+                    <BrandLogo className="h-4 w-5" />
+                    <span className="text-[8px] font-bold tracking-[0.14em] text-white">NIRIKSHAN SAMPLE</span>
                   </div>
                   <div className="mt-4 h-16 rounded bg-[#e8f3f5] p-2">
                     <div className="h-2 w-3/4 rounded bg-[#168cae]/40" />
@@ -265,7 +266,7 @@ export default function Home() {
           <p className="section-kicker">A clear path to compliance</p>
           <h2 className="section-title">How It Works</h2>
           <p className="mt-4 text-base leading-7 text-slate-600">
-            From a field image to a defensible compliance decision, NIRIKSHA
+            From a field image to a defensible compliance decision, NIRIKSHAN
             brings the entire inspection workflow into one place.
           </p>
         </div>
@@ -294,7 +295,7 @@ export default function Home() {
           <div className="flex flex-col justify-between gap-8 lg:flex-row lg:items-end">
             <div className="max-w-xl">
               <p className="section-kicker">Designed around your mandate</p>
-              <h2 className="section-title">Why NIRIKSHA?</h2>
+              <h2 className="section-title">Why NIRIKSHAN?</h2>
               <p className="mt-4 text-base leading-7 text-slate-600">
                 Better tools help officers make consistent, transparent
                 decisions while keeping expertise and accountability at the
@@ -351,7 +352,7 @@ export default function Home() {
               <h3 className="text-xs font-bold uppercase tracking-[0.16em] text-blue-100/70">Platform</h3>
               <div className="mt-4 space-y-3 text-sm text-blue-100/65">
                 <a className="block transition hover:text-white" href="#home">Home</a>
-                <a className="block transition hover:text-white" href="#about">About NIRIKSHA</a>
+                <a className="block transition hover:text-white" href="#about">About NIRIKSHAN</a>
                 <a className="block transition hover:text-white" href="#how-it-works">How It Works</a>
               </div>
             </div>

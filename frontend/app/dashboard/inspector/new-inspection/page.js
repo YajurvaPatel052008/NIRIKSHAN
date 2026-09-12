@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { supabase } from "../../../../lib/supabaseClient";
 import {
   ArrowRight,
   CalendarDays,
@@ -10,8 +11,9 @@ import {
   Crosshair,
   FileText,
   MapPin,
-  ShieldCheck,
+  Eye,
 } from "lucide-react";
+import BrandLogo from "@/components/brand-logo";
 
 const categories = [
   "Food & Beverages",
@@ -63,34 +65,48 @@ export default function NewInspectionPage() {
     setIsSubmitting(true);
     const apiUrl = process.env.NEXT_PUBLIC_API_URL;
     const payload = {
-      product_name: form.productName || null,
-      product_category: form.category,
-      manufacturer_name: form.manufacturer || null,
+      category: form.category,
+      manufacturer: form.manufacturer || form.productName || "Unknown",
       retailer_name: form.retailer,
       location: form.location,
-      inspection_datetime: form.dateTime,
       notes: form.notes || null,
     };
 
     try {
-      let inspectionId = "local-draft";
-      if (apiUrl) {
-        const response = await fetch(`${apiUrl}/api/inspections/`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        if (!response.ok) {
-          throw new Error(`The inspection service returned ${response.status}.`);
-        }
-        const savedInspection = await response.json();
-        inspectionId = savedInspection.id || inspectionId;
+      if (!apiUrl || !supabase) {
+        throw new Error("The inspection service or Supabase client is not configured.");
       }
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) throw sessionError;
+      const token = sessionData?.session?.access_token;
+      if (!token) throw new Error("Your Supabase session is not available. Please sign in again.");
+      const response = await fetch(`${apiUrl}/inspections`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token,
+        },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) {
+        let detail = `The inspection service returned ${response.status}.`;
+        try {
+          const body = await response.json();
+          if (body.detail) detail = body.detail;
+        } catch {
+          // Keep the HTTP status when the server does not return JSON.
+        }
+        throw new Error(detail);
+      }
+      const savedInspection = await response.json();
+      const inspectionId = savedInspection.id;
+      if (!inspectionId) throw new Error("The inspection service did not return an inspection ID.");
       window.sessionStorage.setItem("niriksha-inspection-draft", JSON.stringify({ id: inspectionId, ...payload }));
       router.push(`/dashboard/inspector/new-inspection/upload?inspectionId=${encodeURIComponent(inspectionId)}`);
-    } catch {
-      window.sessionStorage.setItem("niriksha-inspection-draft", JSON.stringify({ id: "local-draft", ...payload }));
-      router.push("/dashboard/inspector/new-inspection/upload?inspectionId=local-draft");
+    } catch (submitError) {
+      setError(submitError.message || "Unable to create the inspection.");
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -98,7 +114,7 @@ export default function NewInspectionPage() {
     <div className="min-h-screen bg-[#f4f8fa] text-slate-800">
       <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col bg-[#0b304d] text-white lg:flex">
         <div className="flex h-[76px] items-center gap-3 border-b border-white/10 px-6">
-          <span className="flex size-9 items-center justify-center rounded-lg bg-white/10"><ShieldCheck size={21} /></span>
+          <span className="flex size-9 items-center justify-center rounded-lg bg-white/10">          <BrandLogo className="h-8 w-9" /></span>
           <span className="text-lg font-bold tracking-[0.14em]">NIRIKSHA</span>
         </div>
         <nav className="space-y-1 px-4 pt-8">

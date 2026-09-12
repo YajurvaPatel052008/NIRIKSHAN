@@ -11,11 +11,12 @@ import {
   ClipboardList,
   Flag,
   History,
-  ShieldCheck,
+  Eye,
   Target,
   TrendingUp,
   Users,
 } from "lucide-react";
+import BrandLogo from "@/components/brand-logo";
 import {
   Bar,
   BarChart,
@@ -65,7 +66,7 @@ export default function RiskIntelligencePage() {
   return (
     <div className="min-h-screen bg-[#f4f8fa] text-slate-800">
       <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col bg-[#0b304d] text-white lg:flex">
-        <div className="flex h-[76px] items-center gap-3 border-b border-white/10 px-6"><span className="flex size-9 items-center justify-center rounded-lg bg-white/10"><ShieldCheck size={21} /></span><span className="text-lg font-bold tracking-[0.14em]">NIRIKSHA</span></div>
+        <div className="flex h-[76px] items-center gap-3 border-b border-white/10 px-6"><span className="flex size-9 items-center justify-center rounded-lg bg-white/10">                <BrandLogo className="h-8 w-9" /></span><span className="text-lg font-bold tracking-[0.14em]">NIRIKSHA</span></div>
         <nav className="space-y-1 px-4 pt-8"><p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-blue-100/45">Supervisor workspace</p><Link href="/dashboard/supervisor" className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm text-blue-100/65 hover:bg-white/5 hover:text-white"><BarChart3 size={17} /> Dashboard</Link><Link href="/dashboard/products" className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm text-blue-100/65 hover:bg-white/5 hover:text-white"><ClipboardList size={17} /> Product Repository</Link><Link href="/dashboard/risk-intelligence" className="flex items-center gap-3 rounded-md bg-white/10 px-3 py-2.5 text-sm font-medium text-white"><AlertTriangle size={17} /> Risk Intelligence</Link></nav>
         <div className="mt-auto border-t border-white/10 p-4"><p className="px-3 text-[10px] leading-4 text-blue-100/35">Smart India Hackathon<br />Internal prototype</p></div>
       </aside>

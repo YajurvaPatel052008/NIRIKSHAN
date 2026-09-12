@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { supabase } from "../../../../../lib/supabaseClient";
 import {
   ArrowLeft,
   ArrowRight,
@@ -12,10 +13,11 @@ import {
   ImagePlus,
   LoaderCircle,
   RefreshCw,
-  ShieldCheck,
+  Eye,
   UploadCloud,
   X,
 } from "lucide-react";
+import BrandLogo from "@/components/brand-logo";
 
 const checks = [
   "Image Resolution Sufficient",
@@ -26,31 +28,7 @@ const checks = [
 ];
 
 function DemoLabel() {
-  return (
-    <div className="relative flex h-full min-h-[280px] items-center justify-center overflow-hidden rounded-lg bg-[#edf4f6] p-8">
-      <div className="w-[205px] rotate-[-4deg] rounded-md border border-slate-300 bg-white p-3 shadow-xl">
-        <div className="flex h-8 items-center gap-2 rounded bg-[#0f3d63] px-2">
-          <ShieldCheck size={13} className="text-white" />
-          <span className="text-[8px] font-bold tracking-[0.13em] text-white">NIRIKSHA SAMPLE</span>
-        </div>
-        <div className="mt-4 rounded bg-[#e1f1f4] p-3">
-          <p className="text-[10px] font-bold text-[#0f3d63]">PREMIUM WHOLE WHEAT</p>
-          <div className="mt-2 h-1.5 w-3/4 rounded bg-[#168cae]/40" />
-          <div className="mt-2 h-1.5 w-1/2 rounded bg-slate-300" />
-        </div>
-        <div className="mt-4 space-y-2">
-          <div className="h-1.5 w-full rounded bg-slate-200" />
-          <div className="h-1.5 w-5/6 rounded bg-slate-200" />
-          <div className="h-1.5 w-2/3 rounded bg-slate-200" />
-        </div>
-        <div className="mt-5 flex items-end justify-between">
-          <div className="space-y-1"><div className="h-1.5 w-14 rounded bg-slate-300" /><div className="h-1.5 w-20 rounded bg-slate-200" /></div>
-          <div className="grid grid-cols-4 gap-0.5">{Array.from({ length: 20 }).map((_, index) => <span key={index} className="size-1.5 bg-[#0f3d63]" />)}</div>
-        </div>
-      </div>
-      <span className="absolute bottom-4 left-4 rounded bg-white/80 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">Preview image</span>
-    </div>
-  );
+  return <div className="flex min-h-[280px] items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-sm text-slate-500">No image selected.</div>;
 }
 
 export default function ImageUploadPage() {
@@ -82,7 +60,7 @@ export default function ImageUploadPage() {
     }
     setChecksComplete([]);
     setIsChecking(true);
-    setImage({ url: URL.createObjectURL(file), name: file.name });
+    setImage({ url: URL.createObjectURL(file), name: file.name, file });
   }
 
   function handleDrop(event) {
@@ -100,10 +78,50 @@ export default function ImageUploadPage() {
 
   const qualityGood = checksComplete.length === checks.length && !isChecking;
 
+  async function proceedToAnalysis(event) {
+    event.preventDefault();
+    const inspectionId = new URLSearchParams(window.location.search).get("inspectionId");
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    if (!inspectionId || inspectionId === "local-draft") {
+      setError("This inspection was not saved. Go back, start a new inspection, and save the inspection details first.");
+      return;
+    }
+    if (!apiUrl || !supabase || !image?.file) {
+      setError("Select an image and make sure the inspection service is configured.");
+      return;
+    }
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      if (!token) throw new Error("Your session has expired. Please sign in again.");
+      const formData = new FormData();
+      formData.append("file", image.file);
+      const response = await fetch(`${apiUrl}/inspections/${inspectionId}/upload-image`, {
+        method: "POST",
+        headers: { Authorization: "Bearer " + token },
+        body: formData,
+      });
+      if (!response.ok) {
+        let detail = `Unable to upload the inspection image (${response.status}).`;
+        try {
+          const body = await response.json();
+          if (body.detail) detail = body.detail;
+        } catch {
+          // Keep the HTTP status when the server does not return JSON.
+        }
+        throw new Error(detail);
+      }
+      window.sessionStorage.setItem("niriksha-inspection-id", inspectionId);
+      window.location.href = `/dashboard/inspector/new-inspection/analysis?inspectionId=${encodeURIComponent(inspectionId)}`;
+    } catch (uploadError) {
+      setError(uploadError.message);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[#f4f8fa] text-slate-800">
       <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col bg-[#0b304d] text-white lg:flex">
-        <div className="flex h-[76px] items-center gap-3 border-b border-white/10 px-6"><span className="flex size-9 items-center justify-center rounded-lg bg-white/10"><ShieldCheck size={21} /></span><span className="text-lg font-bold tracking-[0.14em]">NIRIKSHA</span></div>
+        <div className="flex h-[76px] items-center gap-3 border-b border-white/10 px-6"><span className="flex size-9 items-center justify-center rounded-lg bg-white/10">                <BrandLogo className="h-8 w-9" /></span><span className="text-lg font-bold tracking-[0.14em]">NIRIKSHA</span></div>
         <nav className="space-y-1 px-4 pt-8"><Link href="/dashboard/inspector" className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-blue-100/65 hover:bg-white/5 hover:text-white"><ChevronLeft size={17} /> Dashboard</Link><Link href="/dashboard/inspector/new-inspection" className="flex items-center gap-3 rounded-md bg-white/10 px-3 py-2.5 text-sm font-medium text-white"><FileImage size={17} /> New Inspection</Link></nav>
       </aside>
       <div className="lg:pl-64">
@@ -127,7 +145,7 @@ export default function ImageUploadPage() {
             </div>
           )}
           {error && <p className="mt-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
-          <div className="mt-8 flex flex-col-reverse justify-between gap-3 border-t border-slate-200 pt-6 sm:flex-row"><Link href="/dashboard/inspector/new-inspection" className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-slate-300 px-5 text-sm font-bold text-slate-600 hover:bg-white"><ArrowLeft size={16} /> Back</Link><div className="flex flex-col gap-3 sm:flex-row"><button type="button" onClick={retake} disabled={!image} className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-[#9ccddd] px-5 text-sm font-bold text-[#0f6584] hover:bg-[#edf7fb] disabled:cursor-not-allowed disabled:opacity-40"><RefreshCw size={16} /> Retake</button><Link href={qualityGood ? "/dashboard/inspector/new-inspection/analysis" : "#"} aria-disabled={!qualityGood} onClick={(event) => { if (!qualityGood) event.preventDefault(); }} className={`inline-flex h-11 items-center justify-center gap-2 rounded-md px-5 text-sm font-bold text-white ${qualityGood ? "bg-[#0f3d63] hover:bg-[#0b2e4b]" : "cursor-not-allowed bg-slate-300"}`}>Proceed to AI Analysis <ArrowRight size={17} /></Link></div></div>
+          <div className="mt-8 flex flex-col-reverse justify-between gap-3 border-t border-slate-200 pt-6 sm:flex-row"><Link href="/dashboard/inspector/new-inspection" className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-slate-300 px-5 text-sm font-bold text-slate-600 hover:bg-white"><ArrowLeft size={16} /> Back</Link><div className="flex flex-col gap-3 sm:flex-row"><button type="button" onClick={retake} disabled={!image} className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-[#9ccddd] px-5 text-sm font-bold text-[#0f6584] hover:bg-[#edf7fb] disabled:cursor-not-allowed disabled:opacity-40"><RefreshCw size={16} /> Retake</button>          <button type="button" onClick={proceedToAnalysis} disabled={!qualityGood} className={`inline-flex h-11 items-center justify-center gap-2 rounded-md px-5 text-sm font-bold text-white ${qualityGood ? "bg-[#0f3d63] hover:bg-[#0b2e4b]" : "cursor-not-allowed bg-slate-300"}`}>Proceed to AI Analysis <ArrowRight size={17} /></button></div></div>
         </main>
       </div>
     </div>

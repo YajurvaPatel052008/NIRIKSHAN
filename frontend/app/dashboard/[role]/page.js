@@ -22,11 +22,12 @@ import {
   PackageSearch,
   Plus,
   Settings,
-  ShieldCheck,
+  Eye,
   SlidersHorizontal,
   Users,
   X,
 } from "lucide-react";
+import BrandLogo from "@/components/brand-logo";
 import {
   Bar,
   BarChart,
@@ -288,17 +289,17 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-[#f4f8fa] text-slate-800">
       <aside className={`fixed inset-y-0 left-0 z-30 flex w-64 flex-col bg-[#0b304d] text-white transition-transform lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
-        <div className="flex h-[76px] items-center gap-3 border-b border-white/10 px-6"><span className="flex size-9 items-center justify-center rounded-lg bg-white/10"><ShieldCheck size={21} /></span><span className="text-lg font-bold tracking-[0.14em]">NIRIKSHA</span><button className="ml-auto lg:hidden" onClick={() => setSidebarOpen(false)}><X size={20} /></button></div>
-        <div className="px-4 pt-7"><p className="px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-blue-100/45">Workspace</p><nav className="mt-3 space-y-1">{navItems.map(([label, active]) => { const Icon = iconMap[label]; const href = label === "Product Repository" ? "/dashboard/products" : label === "New Inspection" ? "/dashboard/inspector/new-inspection" : label === "Risk Intelligence" ? "/dashboard/risk-intelligence" : null; return href ? <a href={href} key={label} className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium text-blue-100/65 transition hover:bg-white/5 hover:text-white"><Icon size={17} />{label}</a> : <button key={label} className={`flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium transition ${active && label === "Dashboard" ? "bg-white/10 text-white" : "text-blue-100/65 hover:bg-white/5 hover:text-white"}`}><Icon size={17} />{label}</button>; })}</nav></div>
+        <div className="flex h-[76px] items-center gap-3 border-b border-white/10 px-6"><span className="flex size-9 items-center justify-center rounded-lg bg-white/10">                <BrandLogo className="h-8 w-9" /></span><span className="text-lg font-bold tracking-[0.14em]">NIRIKSHA</span><button className="ml-auto lg:hidden" onClick={() => setSidebarOpen(false)}><X size={20} /></button></div>
+        <div className="px-4 pt-7"><p className="px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-blue-100/45">Workspace</p><nav className="mt-3 space-y-1">{navItems.map(([label, active]) => { const Icon = iconMap[label]; const href = label === "Product Repository" ? "/dashboard/products" : label === "New Inspection" ? "/dashboard/inspector/new-inspection" : label === "Risk Intelligence" ? "/dashboard/risk-intelligence" : label === "Inspection History" ? "/dashboard/inspector/history" : null; return href ? <a href={href} key={label} className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium text-blue-100/65 transition hover:bg-white/5 hover:text-white"><Icon size={17} />{label}</a> : <button key={label} className={`flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium transition ${active && label === "Dashboard" ? "bg-white/10 text-white" : "text-blue-100/65 hover:bg-white/5 hover:text-white"}`}><Icon size={17} />{label}</button>; })}</nav></div>
         <div className="mt-auto border-t border-white/10 p-4"><button className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-blue-100/65 hover:bg-white/5 hover:text-white"><LogOut size={17} /> Logout</button><p className="mt-5 px-3 text-[10px] leading-4 text-blue-100/35">Smart India Hackathon<br />Internal prototype</p></div>
       </aside>
       {sidebarOpen && <button aria-label="Close sidebar" className="fixed inset-0 z-20 bg-[#061b2c]/50 lg:hidden" onClick={() => setSidebarOpen(false)} />}
       <div className="lg:pl-64">
         <header className="sticky top-0 z-10 flex h-[76px] items-center justify-between border-b border-slate-200 bg-white/95 px-5 backdrop-blur sm:px-8">
-          <div className="flex items-center gap-3"><button className="rounded-md p-2 text-[#0f3d63] lg:hidden" onClick={() => setSidebarOpen(true)}><Menu size={21} /></button><div className="hidden items-center gap-2 text-sm text-slate-400 sm:flex"><ShieldCheck size={17} className="text-[#168cae]" /> Enforcement workspace</div></div>
+          <div className="flex items-center gap-3"><button className="rounded-md p-2 text-[#0f3d63] lg:hidden" onClick={() => setSidebarOpen(true)}><Menu size={21} /></button><div className="hidden items-center gap-2 text-sm text-slate-400 sm:flex">                    <BrandLogo className="h-5 w-5" /> Enforcement workspace</div></div>
           <div className="flex items-center gap-3"><button className="relative rounded-full p-2 text-slate-500 hover:bg-slate-100"><Bell size={19} /><span className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-[#d18a26]" /></button><div className="hidden h-7 w-px bg-slate-200 sm:block" /><div className="relative"><select value={role} onChange={(event) => changeRole(event.target.value)} aria-label="Dashboard role" className="h-9 appearance-none rounded-md border border-slate-200 bg-white py-1 pl-3 pr-8 text-xs font-bold text-[#0f3d63] outline-none"><option value="inspector">Inspector</option><option value="supervisor">Supervisor</option><option value="administrator">Administrator</option></select><ChevronDown size={14} className="pointer-events-none absolute right-2 top-3 text-slate-400" /></div><div className="hidden items-center gap-2 sm:flex"><span className="flex size-9 items-center justify-center rounded-full bg-[#dbeef2] text-xs font-bold text-[#0f6584]">{displayName.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase()}</span><div><p className="text-xs font-bold text-[#0f3d63]">{displayName}</p><p className="text-[10px] text-slate-400">{displayRole}</p></div></div></div>
         </header>
-        <main className="mx-auto max-w-[1500px] p-5 sm:p-8">{!apiConnected && <div className="mb-5 flex items-center gap-2 rounded-lg border border-[#f0d8ae] bg-[#fff9ed] px-4 py-3 text-xs text-[#805b1e]"><FileText size={15} /> Showing demo data. Connect the FastAPI backend through <code className="font-semibold">NEXT_PUBLIC_API_URL</code> for live data.</div>}{role === "inspector" && <InspectorView name={displayName} onStartInspection={() => router.push("/dashboard/inspector/new-inspection")} />}{role === "supervisor" && <SupervisorView />}{role === "administrator" && <AdministratorView />}</main>
+        <main className="mx-auto max-w-[1500px] p-5 sm:p-8">{role === "inspector" && <InspectorView name={displayName} onStartInspection={() => router.push("/dashboard/inspector/new-inspection")} />}{role === "supervisor" && <SupervisorView />}{role === "administrator" && <AdministratorView />}</main>
       </div>
     </div>
   );

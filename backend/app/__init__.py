@@ -1,0 +1,1 @@
+"""NIRIKSHA FastAPI application package."""

@@ -10,10 +10,11 @@ import {
   FileText,
   Flag,
   MapPin,
-  ShieldCheck,
+  Eye,
   TrendingUp,
   User,
 } from "lucide-react";
+import BrandLogo from "@/components/brand-logo";
 import {
   CartesianGrid,
   Line,
@@ -46,7 +47,7 @@ const trend = inspections.slice().reverse().map(([date, , , score]) => ({ date: 
 
 function ProductIcon({ kind }) {
   const colors = { biscuits: "bg-amber-100", soap: "bg-pink-100", snacks: "bg-orange-100", water: "bg-sky-100", household: "bg-purple-100", personal: "bg-red-100", salt: "bg-slate-100", milk: "bg-blue-100" };
-  return <div className={`flex size-16 items-center justify-center rounded-xl ${colors[kind] || "bg-slate-100"}`}><ShieldCheck size={28} className="text-[#0f6584]" /></div>;
+  return <div className={`flex size-16 items-center justify-center rounded-xl ${colors[kind] || "bg-slate-100"}`}>    <BrandLogo className="h-10 w-11" /></div>;
 }
 
 function StatusBadge({ status }) {
@@ -61,7 +62,7 @@ export default function ProductHistoryPage() {
 
   return (
     <div className="min-h-screen bg-[#f4f8fa] text-slate-800">
-      <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col bg-[#0b304d] text-white lg:flex"><div className="flex h-[76px] items-center gap-3 border-b border-white/10 px-6"><span className="flex size-9 items-center justify-center rounded-lg bg-white/10"><ShieldCheck size={21} /></span><span className="text-lg font-bold tracking-[0.14em]">NIRIKSHA</span></div><nav className="space-y-1 px-4 pt-8"><Link href="/dashboard/inspector" className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm text-blue-100/65 hover:bg-white/5 hover:text-white"><ChevronLeft size={17} /> Dashboard</Link><Link href="/dashboard/products" className="flex items-center gap-3 rounded-md bg-white/10 px-3 py-2.5 text-sm font-medium text-white"><FileText size={17} /> Product Repository</Link></nav></aside>
+      <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col bg-[#0b304d] text-white lg:flex"><div className="flex h-[76px] items-center gap-3 border-b border-white/10 px-6"><span className="flex size-9 items-center justify-center rounded-lg bg-white/10">            <BrandLogo className="h-8 w-9" /></span><span className="text-lg font-bold tracking-[0.14em]">NIRIKSHA</span></div><nav className="space-y-1 px-4 pt-8"><Link href="/dashboard/inspector" className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm text-blue-100/65 hover:bg-white/5 hover:text-white"><ChevronLeft size={17} /> Dashboard</Link><Link href="/dashboard/products" className="flex items-center gap-3 rounded-md bg-white/10 px-3 py-2.5 text-sm font-medium text-white"><FileText size={17} /> Product Repository</Link></nav></aside>
       <div className="lg:pl-64"><header className="flex h-[76px] items-center justify-between border-b border-slate-200 bg-white px-5 sm:px-8"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-[#168cae]">Product intelligence</p><h1 className="text-lg font-bold text-[#0f3d63]">Inspection History</h1></div><Link href="/dashboard/products" className="inline-flex items-center gap-2 text-sm font-semibold text-[#0f6584] hover:text-[#0f3d63]"><ArrowLeft size={16} /> Back to repository</Link></header>
         <main className="mx-auto max-w-[1400px] p-5 sm:p-8">
           <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"><div className="flex flex-col justify-between gap-5 md:flex-row md:items-center"><div className="flex items-center gap-4"><ProductIcon kind={kind} /><div><p className="text-xs font-bold uppercase tracking-[0.14em] text-[#168cae]">Product profile · {id}</p><h2 className="mt-1 text-2xl font-bold text-[#0f3d63]">{name}</h2><p className="mt-2 text-sm text-slate-500">{manufacturer} · {category}</p></div></div><span className="inline-flex w-fit items-center gap-2 rounded-full bg-red-50 px-3 py-2 text-xs font-bold text-red-700 ring-1 ring-inset ring-red-200"><AlertTriangle size={15} /> Repeat Violations</span></div></section>

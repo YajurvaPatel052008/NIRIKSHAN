@@ -11,10 +11,10 @@ import {
   Eye,
   EyeOff,
   LockKeyhole,
-  ShieldCheck,
 } from "lucide-react";
 
 import { supabase } from "@/lib/supabaseClient";
+import BrandLogo from "@/components/brand-logo";
 
 const roleLabels = {
   inspector: "Inspector Dashboard",
@@ -24,12 +24,12 @@ const roleLabels = {
 
 function Logo() {
   return (
-    <Link href="/" className="inline-flex items-center gap-3" aria-label="NIRIKSHA home">
+    <Link href="/" className="inline-flex items-center gap-3" aria-label="NIRIKSHAN home">
       <span className="flex size-11 items-center justify-center rounded-lg bg-[#0f3d63] text-white shadow-sm">
-        <ShieldCheck size={24} strokeWidth={1.8} />
+        <BrandLogo className="h-10 w-11" />
       </span>
       <span className="text-left leading-none">
-        <span className="block text-lg font-bold tracking-[0.14em] text-[#0f3d63]">NIRIKSHA</span>
+        <span className="block text-lg font-bold tracking-[0.14em] text-[#0f3d63]">NIRIKSHAN</span>
         <span className="mt-1 block text-[9px] font-medium uppercase tracking-[0.18em] text-slate-500">
           Compliance intelligence
         </span>
@@ -128,7 +128,7 @@ export default function LoginPage() {
         metadataRole === "supervisor" ? "supervisor" : "inspector";
       const { error: recoveryError } = await supabase.from("profiles").insert({
         id: data.user.id,
-        full_name: data.user.user_metadata?.full_name || "NIRIKSHA Officer",
+        full_name: data.user.user_metadata?.full_name || "NIRIKSHAN Officer",
         role: recoveryRole,
         region: null,
       });
@@ -235,7 +235,7 @@ export default function LoginPage() {
               {isLogin ? "Welcome back" : "Create officer account"}
             </h1>
             <p className="mt-2 text-sm text-slate-500">
-              {isLogin ? "Sign in to your NIRIKSHA dashboard." : "Set up a prototype account for testing."}
+              {isLogin ? "Sign in to your NIRIKSHAN dashboard." : "Set up a prototype account for testing."}
             </p>
           </div>
 
@@ -310,12 +310,12 @@ export default function LoginPage() {
           </form>
 
           <p className="mt-7 flex items-center justify-center gap-2 border-t border-slate-100 pt-5 text-center text-xs text-slate-500">
-            <ShieldCheck size={15} className="text-[#168cae]" />
+            <BrandLogo className="h-5 w-5" />
             Access restricted to authorized enforcement personnel.
           </p>
         </section>
         <Link href="/" className="mx-auto mt-6 flex w-fit items-center gap-1.5 text-sm font-semibold text-white/90 hover:text-white">
-          <ArrowLeft size={16} /> Back to NIRIKSHA
+          <ArrowLeft size={16} /> Back to NIRIKSHAN
         </Link>
       </div>
     </main>
