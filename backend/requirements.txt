@@ -7,7 +7,7 @@ PyJWT
 python-dotenv
 opencv-python-headless==4.6.0.66
 imgaug==0.4.0
-paddleocr
+paddleocr==2.7.0.3
 paddlepaddle==2.6.2
 groq
 supabase
