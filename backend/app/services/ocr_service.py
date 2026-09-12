@@ -81,6 +81,8 @@ def _read_v2_result(raw_result: Any) -> list[dict]:
 def _read_v3_result(raw_result: Any) -> list[dict]:
     """Read PaddleOCR 3.x result objects or dictionaries."""
     data = raw_result.json if hasattr(raw_result, "json") else raw_result
+    if callable(data):
+        data = data()
     if isinstance(data, str):
         try:
             data = json.loads(data)
@@ -97,9 +99,18 @@ def _read_v3_result(raw_result: Any) -> list[dict]:
     if not isinstance(data, dict):
         return []
 
+    nested = data.get("res")
+    if isinstance(nested, dict):
+        data = nested
+
     texts = data.get("rec_texts", [])
     scores = data.get("rec_scores", [])
-    polygons = data.get("rec_polys", data.get("dt_polys", []))
+    polygons = data.get(
+        "rec_polys",
+        data.get("rec_boxes", data.get("dt_polys", data.get("dt_boxes", []))),
+    )
+    if not texts:
+        logger.warning("PaddleOCR returned no rec_texts; result keys: %s", list(data))
     detections = []
     for text, confidence, polygon in zip(texts, scores, polygons):
         box = _box_from_polygon(polygon)
