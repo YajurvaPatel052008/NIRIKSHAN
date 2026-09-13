@@ -4,38 +4,25 @@ from __future__ import annotations
 
 import os
 import logging
-import json
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 
-# PaddlePaddle 3.x can select oneDNN on Linux builds where the PIR runtime
-# does not support every attribute emitted by the current OCR detector.
 os.environ.setdefault("FLAGS_use_mkldnn", "0")
-os.environ.setdefault("PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK", "True")
 
 from paddleocr import PaddleOCR
 
 logger = logging.getLogger(__name__)
 
-# These settings are deliberate memory-saving tradeoffs for the 0.5GB
-# deployment limit; do not remove them without reconsidering Railway's peak RAM.
-try:
-    OCR_ENGINE = PaddleOCR(
-        lang="en",
-        text_detection_model_name="PP-OCRv5_mobile_det",
-        text_recognition_model_name="PP-OCRv5_mobile_rec",
-        use_angle_cls=False,
-        det_limit_side_len=960,
-        use_doc_orientation_classify=False,
-        use_doc_unwarping=False,
-        use_textline_orientation=False,
-        enable_mkldnn=False,
-    )
-except (TypeError, ValueError):
-    # Keep the latest PaddleOCR runtime while supporting minor API changes.
-    OCR_ENGINE = PaddleOCR(lang="en")
+# These settings intentionally use the stable 2.x runtime and bounded detector
+# resolution for Railway's 0.5GB deployment; do not replace them with 3.x defaults.
+OCR_ENGINE = PaddleOCR(
+    use_angle_cls=False,
+    lang="en",
+    use_mkldnn=False,
+    det_limit_side_len=960,
+)
 
 
 def _as_array(value: Any) -> np.ndarray | None:
@@ -79,67 +66,16 @@ def _read_v2_result(raw_result: Any) -> list[dict]:
     return detections
 
 
-def _read_v3_result(raw_result: Any) -> list[dict]:
-    """Read PaddleOCR 3.x result objects or dictionaries."""
-    data = raw_result.json if hasattr(raw_result, "json") else raw_result
-    if callable(data):
-        data = data()
-    if isinstance(data, str):
-        try:
-            data = json.loads(data)
-        except json.JSONDecodeError:
-            return []
-    if isinstance(data, list):
-        if len(data) == 1:
-            data = data[0]
-        else:
-            detections = []
-            for item in data:
-                detections.extend(_read_v3_result(item))
-            return detections
-    if not isinstance(data, dict):
-        return []
-
-    nested = data.get("res")
-    if isinstance(nested, dict):
-        data = nested
-
-    texts = data.get("rec_texts", [])
-    scores = data.get("rec_scores", [])
-    polygons = data.get(
-        "rec_polys",
-        data.get("rec_boxes", data.get("dt_polys", data.get("dt_boxes", []))),
-    )
-    if not texts:
-        logger.warning("PaddleOCR returned no rec_texts; result keys: %s", list(data))
-    detections = []
-    for text, confidence, polygon in zip(texts, scores, polygons):
-        box = _box_from_polygon(polygon)
-        if box is not None:
-            detections.append({
-                "text": str(text),
-                "confidence": float(confidence),
-                "bounding_box": box,
-            })
-    return detections
-
-
 def extract_text(image: np.ndarray) -> list[dict]:
     """Run PaddleOCR and return normalized text, confidence, and box records."""
     if not isinstance(image, np.ndarray) or image.size == 0:
         raise ValueError("image must be a non-empty NumPy array")
 
     try:
-        if hasattr(OCR_ENGINE, "predict"):
-            detections = []
-            for result in OCR_ENGINE.predict(image) or []:
-                detections.extend(_read_v3_result(result))
-            return detections
-
         raw_results = OCR_ENGINE.ocr(image)
         if not raw_results:
             return []
-        return _read_v2_result(raw_results[0] if len(raw_results) == 1 else raw_results)
+        return _read_v2_result(raw_results[0])
     except (RuntimeError, TypeError, ValueError, AttributeError) as exc:
         logger.exception("PaddleOCR failed to process image: %s", exc)
         return []
