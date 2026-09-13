@@ -9,6 +9,7 @@ from typing import Any
 from groq import Groq
 
 from app.config import settings
+from app.services.declaration_terms import DECLARATION_TERMS
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +49,7 @@ def _normalize_declaration_type(value: Any) -> str:
 def _build_prompt(raw_ocr_lines: list[dict], category: str) -> str:
     ocr_payload = json.dumps(raw_ocr_lines, ensure_ascii=False, separators=(",", ":"))
     declaration_types = ", ".join(DECLARATION_TYPES)
+    terminology = json.dumps(DECLARATION_TERMS, ensure_ascii=False, separators=(",", ":"))
     return f"""You are a Legal Metrology label compliance extraction assistant for packaged
 commodities in India.
 
@@ -59,10 +61,36 @@ The OCR output below contains detected text and its source bounding box:
 Classify each relevant piece of text into exactly one of these declaration types:
 {declaration_types}
 
-Normalize values for consistent rule checks. Examples:
-- "Rs.149/-" becomes "₹149"
-- "250 GM" becomes "250g"
-- "MAR 2025" becomes "03/2025"
+Use this maintained terminology reference to map alternate label phrasings to the
+canonical declaration type. This reference is expanded from real labels over time:
+{terminology}
+
+Normalization rules:
+- Strip "/-" from MRP values: "₹2499.00/-" becomes "₹2499.00".
+- Convert a full month and year such as "June 2026" to "06/2026".
+- For combined manufacturer, packer, importer, or marketer headings, capture
+  the complete address block as the value.
+- Keep country codes such as "PRC" as-is unless an obvious full-name mapping exists.
+- Consumer Care Details must include phone numbers and/or email addresses under the heading.
+- Preserve useful units while normalizing spacing, such as "250 GM" to "250g".
+
+Few-shot example:
+Input label fields:
+"Qty: 1 Unit", "Maximum retail price per unit (Inclusive of all taxes): ₹2499.00/-",
+"Month & Year of Manufacturing: June 2026",
+"Imported, Marketed & Packed by: Hammer Lifestyle, SCO 4, Sector-25, Behind Malik, Petrol Pump, G.T Road, Panipat-132103 INDIA",
+"Country of origin: PRC",
+"For Customer Support: PH 0180-4008081, 9991108081, Email: info@hammeronline.in"
+Expected mappings:
+- Net Quantity -> "1 Unit"
+- MRP -> "₹2499.00"
+- Month & Year of Manufacture/Packing -> "06/2026"
+- Manufacturer/Packer/Importer Name & Address -> "Hammer Lifestyle, SCO 4, Sector-25, Behind Malik, Petrol Pump, G.T Road, Panipat-132103 INDIA"
+- Country of Origin -> "PRC"
+- Consumer Care Details -> "PH 0180-4008081, 9991108081, Email: info@hammeronline.in"
+
+Ignore non-mandatory fields such as Brand Name, Model Name, Color, and Warranty.
+Do not force them into a declaration type or invent a new type; skip them.
 
 Return ONLY a strict JSON array, with no preamble and no markdown fences.
 Each found declaration must be one compact object with these keys:

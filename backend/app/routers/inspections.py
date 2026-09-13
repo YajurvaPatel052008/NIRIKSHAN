@@ -405,12 +405,29 @@ def verify_inspection(
             )
 
         for correction in corrections:
+            original_declaration = next(
+                declaration
+                for declaration in declarations
+                if declaration["id"] == correction.declaration_id
+            )
             client.table("extracted_declarations").update(
                 {
                     "normalized_value": correction.corrected_value,
                     "source": "human_corrected",
                 }
             ).eq("id", correction.declaration_id).execute()
+            client.table("declaration_review_corrections").insert(
+                {
+                    "inspection_id": inspection_id,
+                    "declaration_id": correction.declaration_id,
+                    "declaration_type": original_declaration.get("declaration_type", ""),
+                    "original_ocr_text": original_declaration.get("extracted_value")
+                    or original_declaration.get("normalized_value")
+                    or "",
+                    "corrected_value": correction.corrected_value,
+                    "reason": correction.reason,
+                }
+            ).execute()
             for declaration in declarations:
                 if declaration["id"] == correction.declaration_id:
                     declaration["normalized_value"] = correction.corrected_value
