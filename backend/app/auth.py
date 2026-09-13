@@ -65,10 +65,20 @@ async def get_current_user(
             .execute()
         )
     except Exception as exc:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Unable to load the user profile.",
-        ) from exc
+        # Keep existing deployments usable until the status migration is run.
+        try:
+            profile_response = (
+                supabase.table("profiles")
+                .select("id, role, region")
+                .eq("id", user_id)
+                .maybe_single()
+                .execute()
+            )
+        except Exception:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Unable to load the user profile.",
+            ) from exc
 
     profile = profile_response.data
     if not profile:

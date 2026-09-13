@@ -48,11 +48,20 @@ export default function DashboardLayout({ children }) {
         return;
       }
 
-      const { data: profile, error: profileError } = await supabase
+      let { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("role, status")
         .eq("id", data.user.id)
         .maybeSingle();
+      if (profileError?.message?.toLowerCase().includes("status does not exist")) {
+        const fallback = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", data.user.id)
+          .maybeSingle();
+        profile = fallback.data;
+        profileError = fallback.error;
+      }
 
       if (profileError || !profile) {
         router.replace("/login");
