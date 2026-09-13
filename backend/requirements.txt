@@ -5,7 +5,8 @@ pydantic
 pydantic-settings
 PyJWT
 python-dotenv
-opencv-python-headless
+numpy==1.26.4
+opencv-python==4.10.0.84
 paddlepaddle==2.6.2
 paddleocr==2.7.0.3
 pymupdf
@@ -30,4 +31,3 @@ groq
 supabase
 reportlab
 pillow
-numpy
