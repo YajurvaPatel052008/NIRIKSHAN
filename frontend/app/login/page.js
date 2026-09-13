@@ -85,7 +85,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [role, setRole] = useState("inspector");
+  const [role, setRole] = useState("Inspector");
   const [rememberMe, setRememberMe] = useState(true);
   const [status, setStatus] = useState({ type: "", message: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -125,11 +125,15 @@ export default function LoginPage() {
     if (!profile) {
       const metadataRole = data.user.user_metadata?.role;
       const recoveryRole =
-        metadataRole === "supervisor" ? "supervisor" : "inspector";
+        metadataRole === "Admin"
+          ? "administrator"
+          : metadataRole === "Supervisor"
+            ? "supervisor"
+            : "inspector";
       const { error: recoveryError } = await supabase.from("profiles").insert({
         id: data.user.id,
         full_name: data.user.user_metadata?.full_name || "NIRIKSHAN Officer",
-        role: recoveryRole,
+        role: recoveryRole === "administrator" ? "Admin" : recoveryRole === "supervisor" ? "Supervisor" : "Inspector",
         region: null,
       });
 
@@ -145,10 +149,12 @@ export default function LoginPage() {
       return;
     }
 
-    const role = ["inspector", "supervisor", "administrator"].includes(profile.role)
-      ? profile.role
-      : "inspector";
-    router.push(`/dashboard/${role}`);
+    const dashboardRole = {
+      inspector: "inspector",
+      supervisor: "supervisor",
+      admin: "administrator",
+    }[profile.role?.toLowerCase()] || "inspector";
+    router.push(`/dashboard/${dashboardRole}`);
   }
 
   async function handleSignUp(event) {
@@ -171,7 +177,7 @@ export default function LoginPage() {
         data: {
           full_name: fullName,
           // Administrator accounts are provisioned separately by an administrator.
-          role: role === "administrator" ? "inspector" : role,
+          role,
         },
       },
     });
@@ -286,8 +292,9 @@ export default function LoginPage() {
               <label className="block">
                 <span className="mb-2 block text-sm font-semibold text-slate-700">Role</span>
                 <select value={role} onChange={(event) => setRole(event.target.value)} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3.5 text-sm outline-none focus:border-[#168cae] focus:ring-2 focus:ring-[#168cae]/15">
-                  <option value="inspector">Inspector</option>
-                  <option value="supervisor">Supervisor</option>
+                  <option value="Inspector">Inspector</option>
+                  <option value="Supervisor">Supervisor</option>
+                  <option value="Admin">Administrator</option>
                 </select>
                 <p className="mt-2 text-xs leading-5 text-slate-500">
                   Administrator access is provisioned by an existing administrator.

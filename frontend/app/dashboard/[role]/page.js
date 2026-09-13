@@ -246,9 +246,10 @@ export default function DashboardPage() {
         .maybeSingle();
 
       if (mounted) {
+        const profileRole = profile?.role || "";
         setOfficer({
           name: profile?.full_name || authData.user.user_metadata?.full_name || authData.user.email?.split("@")[0] || "",
-          role: profile?.role || "",
+          role: profileRole.toLowerCase() === "admin" ? "administrator" : profileRole.toLowerCase(),
         });
       }
     }
