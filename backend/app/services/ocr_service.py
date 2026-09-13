@@ -19,14 +19,15 @@ from paddleocr import PaddleOCR
 
 logger = logging.getLogger(__name__)
 
-# PaddleOCR model files are downloaded on first run and cached. On Render's
-# free tier this can add cold-start latency; consider pre-warming with a blank
-# image during FastAPI startup via an `@app.on_event("startup")` handler.
+# These settings are deliberate memory-saving tradeoffs for the 0.5GB
+# deployment limit; do not remove them without reconsidering Railway's peak RAM.
 try:
     OCR_ENGINE = PaddleOCR(
         lang="en",
         text_detection_model_name="PP-OCRv5_mobile_det",
         text_recognition_model_name="PP-OCRv5_mobile_rec",
+        use_angle_cls=False,
+        det_limit_side_len=960,
         use_doc_orientation_classify=False,
         use_doc_unwarping=False,
         use_textline_orientation=False,
@@ -135,7 +136,7 @@ def extract_text(image: np.ndarray) -> list[dict]:
                 detections.extend(_read_v3_result(result))
             return detections
 
-        raw_results = OCR_ENGINE.ocr(image, cls=True)
+        raw_results = OCR_ENGINE.ocr(image)
         if not raw_results:
             return []
         return _read_v2_result(raw_results[0] if len(raw_results) == 1 else raw_results)
