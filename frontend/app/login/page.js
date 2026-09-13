@@ -84,6 +84,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [region, setRegion] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [role, setRole] = useState("Inspector");
   const [rememberMe, setRememberMe] = useState(true);
@@ -135,7 +136,7 @@ export default function LoginPage() {
         id: data.user.id,
         full_name: data.user.user_metadata?.full_name || "NIRIKSHAN Officer",
         role: recoveryRole === "administrator" ? "Admin" : recoveryRole === "supervisor" ? "Supervisor" : "Inspector",
-        region: null,
+        region: region || null,
       });
 
       if (recoveryError) {
@@ -178,6 +179,7 @@ export default function LoginPage() {
       options: {
         data: {
           full_name: fullName,
+          region,
           // Administrator accounts are provisioned separately by an administrator.
           role,
         },
@@ -287,6 +289,7 @@ export default function LoginPage() {
 
           <form onSubmit={isLogin ? handleLogin : handleSignUp} className="space-y-5">
             {!isLogin && <Field label="Full Name" value={fullName} onChange={(event) => setFullName(event.target.value)} placeholder="Enter full name" required />}
+            {!isLogin && <Field label="Region" value={region} onChange={(event) => setRegion(event.target.value)} placeholder="Enter department region" />}
             <Field label="Email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="officer@department.gov.in" required />
             <PasswordField label="Password" value={password} onChange={(event) => setPassword(event.target.value)} />
             {!isLogin && <PasswordField label="Confirm Password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} placeholder="Re-enter password" />}

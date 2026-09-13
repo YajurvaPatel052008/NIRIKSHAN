@@ -50,7 +50,12 @@ def list_users(user: CurrentUser = AdminUser):
     del user
     client = _client()
     try:
-        response = client.table("profiles").select("*").order("created_at").execute()
+        response = (
+            client.table("profiles")
+            .select("id, full_name, role, region, status, created_at")
+            .order("created_at")
+            .execute()
+        )
         profiles = response.data or []
         try:
             auth_response = client.auth.admin.list_users()
