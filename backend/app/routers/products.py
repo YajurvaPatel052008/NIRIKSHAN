@@ -24,6 +24,7 @@ def list_products(
     search: str | None = None,
     category: str | None = None,
     compliance_status: str | None = None,
+    manufacturer: str | None = None,
     date_from: date | None = None,
     date_to: date | None = None,
     user: CurrentUser = Depends(get_current_user),
@@ -77,6 +78,8 @@ def list_products(
         if search_term and search_term not in searchable:
             continue
         if category and product.get("category", "").casefold() != category.casefold():
+            continue
+        if manufacturer and product.get("manufacturer", "").casefold() != manufacturer.casefold():
             continue
         if (
             compliance_status

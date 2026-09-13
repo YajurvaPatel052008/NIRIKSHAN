@@ -218,6 +218,7 @@ async def upload_inspection_image(
 @router.get("")
 def list_inspections(
     inspector_id: str | None = None,
+    product_id: str | None = None,
     inspection_status: str | None = Query(default=None, alias="status"),
     compliance_status: str | None = None,
     category: str | None = None,
@@ -237,6 +238,8 @@ def list_inspections(
         )
         if inspector_id:
             query = query.eq("inspector_id", inspector_id)
+        if product_id:
+            query = query.eq("product_id", product_id)
         if inspection_status:
             query = query.ilike("status", inspection_status)
         if compliance_status:
@@ -253,7 +256,7 @@ def list_inspections(
         if search:
             escaped_search = search.replace(",", " ")
             query = query.or_(
-                f"manufacturer.ilike.%{escaped_search}%,products.name.ilike.%{escaped_search}%"
+                f"id.ilike.%{escaped_search}%,manufacturer.ilike.%{escaped_search}%,products.name.ilike.%{escaped_search}%"
             )
 
         start = (page - 1) * page_size
