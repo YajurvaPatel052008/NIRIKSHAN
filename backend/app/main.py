@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.routers import auth, inspections, reports, risk, rules, users
+from app.routers import auth, inspections, products, reports, risk, rules, users
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +26,7 @@ app.add_middleware(
 
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
 app.include_router(inspections.router, prefix="/inspections", tags=["inspections"])
+app.include_router(products.router, prefix="/products", tags=["products"])
 app.include_router(rules.router, prefix="/rules", tags=["rules"])
 app.include_router(users.router, prefix="/users", tags=["users"])
 app.include_router(risk.router, prefix="/risk", tags=["risk"])

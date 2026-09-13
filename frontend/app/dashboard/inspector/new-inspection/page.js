@@ -65,8 +65,9 @@ export default function NewInspectionPage() {
     setIsSubmitting(true);
     const apiUrl = process.env.NEXT_PUBLIC_API_URL;
     const payload = {
+      product_name: form.productName,
       category: form.category,
-      manufacturer: form.manufacturer || form.productName || "Unknown",
+      manufacturer: form.manufacturer || "Unknown",
       retailer_name: form.retailer,
       location: form.location,
       notes: form.notes || null,

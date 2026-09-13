@@ -22,6 +22,7 @@ ALLOWED_IMAGE_TYPES = {
 
 
 class InspectionDraft(BaseModel):
+    product_name: str
     category: str
     manufacturer: str
     retailer_name: str
@@ -71,14 +72,53 @@ def create_inspection(
             detail="Supabase is not configured on this service.",
         )
 
+    product_name = draft.product_name.strip()
+    manufacturer = draft.manufacturer.strip()
+    if not product_name or not manufacturer:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Product name and manufacturer are required.",
+        )
+
     try:
+        product_response = (
+            supabase.table("products")
+            .select("id")
+            .ilike("name", product_name)
+            .ilike("manufacturer", manufacturer)
+            .limit(1)
+            .execute()
+        )
+        product_rows = product_response.data or []
+        if product_rows:
+            product_id = product_rows[0]["id"]
+        else:
+            new_product_response = (
+                supabase.table("products")
+                .insert(
+                    {
+                        "name": product_name,
+                        "category": draft.category,
+                        "manufacturer": manufacturer,
+                    }
+                )
+                .execute()
+            )
+            if not new_product_response.data:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="The product was not returned after creation.",
+                )
+            product_id = new_product_response.data[0]["id"]
+
         response = (
             supabase.table("inspections")
             .insert(
                 {
                     "inspector_id": user.id,
+                    "product_id": product_id,
                     "category": draft.category,
-                    "manufacturer": draft.manufacturer,
+                    "manufacturer": manufacturer,
                     "retailer_name": draft.retailer_name,
                     "location": draft.location,
                     "notes": draft.notes,
@@ -87,6 +127,8 @@ def create_inspection(
             )
             .execute()
         )
+    except HTTPException:
+        raise
     except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
