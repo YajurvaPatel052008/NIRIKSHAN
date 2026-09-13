@@ -1,4 +1,5 @@
 import secrets
+import logging
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -8,6 +9,7 @@ from app.auth import CurrentUser, require_role
 from app.supabase_client import supabase
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 AdminUser = Depends(require_role("Admin"))
 
 
@@ -50,12 +52,7 @@ def list_users(user: CurrentUser = AdminUser):
     del user
     client = _client()
     try:
-        response = (
-            client.table("profiles")
-            .select("id, full_name, role, region, status, created_at")
-            .order("created_at")
-            .execute()
-        )
+        response = client.table("profiles").select("*").order("created_at").execute()
         profiles = response.data or []
         try:
             auth_response = client.auth.admin.list_users()
@@ -73,9 +70,10 @@ def list_users(user: CurrentUser = AdminUser):
     except HTTPException:
         raise
     except Exception as exc:
+        logger.exception("Unable to load users from profiles")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Unable to load users.",
+            detail="Unable to load users from the profiles table.",
         ) from exc
 
 

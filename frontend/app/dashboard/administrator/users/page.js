@@ -22,7 +22,7 @@ export default function UsersPage() {
     const token = data?.session?.access_token;
     if (!token) throw new Error("Your session has expired. Please sign in again.");
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${path}`, { ...options, headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, ...options.headers } });
-    const payload = await response.json();
+    const payload = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(payload.detail || "Unable to complete the request.");
     return payload;
   }
