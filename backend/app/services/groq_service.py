@@ -46,7 +46,7 @@ def _normalize_declaration_type(value: Any) -> str:
 
 
 def _build_prompt(raw_ocr_lines: list[dict], category: str) -> str:
-    ocr_payload = json.dumps(raw_ocr_lines, ensure_ascii=False, indent=2)
+    ocr_payload = json.dumps(raw_ocr_lines, ensure_ascii=False, separators=(",", ":"))
     declaration_types = ", ".join(DECLARATION_TYPES)
     return f"""You are a Legal Metrology label compliance extraction assistant for packaged
 commodities in India.
@@ -65,14 +65,15 @@ Normalize values for consistent rule checks. Examples:
 - "MAR 2025" becomes "03/2025"
 
 Return ONLY a strict JSON array, with no preamble and no markdown fences.
-Each array item must have exactly this shape:
-{{"declaration_type": "string", "extracted_value": "string",
-"normalized_value": "string", "confidence": 0.0,
-"source_bounding_box": {{"x": 0, "y": 0, "w": 0, "h": 0}}}}
+Each found declaration must be one compact object with these keys:
+{{"declaration_type":"string","extracted_value":"string",
+"normalized_value":"string","confidence":0.0,
+"source_bounding_box":{{"x":0,"y":0,"w":0,"h":0}}}}
 
 Use a confidence number from 0 to 1. Set source_bounding_box to null only when
-the declaration cannot be tied to one of the supplied OCR lines. Ignore text
-that is not one of the listed declaration types."""
+the declaration cannot be tied to one of the supplied OCR lines. Include only
+declarations actually found in the OCR text; do not emit placeholder objects for
+missing declaration types. Ignore text that is not one of the listed declaration types."""
 
 
 def _strip_code_fences(content: str) -> str:
@@ -110,13 +111,20 @@ def classify_declarations(raw_ocr_lines: list[dict], category: str) -> list[dict
                 {"role": "user", "content": _build_prompt(raw_ocr_lines, category)},
             ],
             temperature=0,
+            max_tokens=4096,
         )
         content = completion.choices[0].message.content
         if not content:
             logger.error("Groq classification returned an empty response")
             return []
 
-        parsed: Any = json.loads(_strip_code_fences(content))
+        cleaned_content = _strip_code_fences(content)
+        logger.info(
+            "Groq classification response length=%d trailing_100=%r",
+            len(cleaned_content),
+            cleaned_content[-100:],
+        )
+        parsed: Any = json.loads(cleaned_content)
         if not isinstance(parsed, list):
             logger.error("Groq classification response was not a JSON array")
             return []
@@ -130,8 +138,16 @@ def classify_declarations(raw_ocr_lines: list[dict], category: str) -> list[dict
             )
             normalized_declarations.append(normalized_declaration)
         return normalized_declarations
-    except (json.JSONDecodeError, IndexError, TypeError, ValueError) as exc:
-        logger.exception("Unable to parse Groq classification response: %s", exc)
+    except json.JSONDecodeError as exc:
+        logger.error(
+            "Unable to parse Groq classification response: %s; raw response first_500=%r last_500=%r",
+            exc,
+            content[:500] if isinstance(content, str) else content,
+            content[-500:] if isinstance(content, str) else content,
+        )
+        return []
+    except (IndexError, TypeError, ValueError) as exc:
+        logger.exception("Unable to process Groq classification response: %s", exc)
         return []
     except Exception as exc:
         logger.exception("Groq classification request failed: %s", exc)
