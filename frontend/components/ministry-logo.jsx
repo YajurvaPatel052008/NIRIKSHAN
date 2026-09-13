@@ -1,4 +1,4 @@
-export default function MinistryLogo({ className = "h-10 w-10" }) {
+export default function MinistryLogo({ className = "h-10 w-auto" }) {
   return (
     <img
       src="/dcoa.jpeg"

@@ -23,7 +23,7 @@ import {
   X,
 } from "lucide-react";
 import BrandLogo from "../components/brand-logo";
-import MinistryLogo from "../components/ministry-logo";
+import LogoLockup from "../components/logo-lockup";
 
 const steps = [
   {
@@ -87,21 +87,8 @@ const benefits = [
 
 function Logo({ compact = false }) {
   return (
-    <a className="flex items-center gap-3" href="#home" aria-label="NIRIKSHAN home">
-      <MinistryLogo className="h-10 w-10" />
-      <span className="flex size-10 items-center justify-center rounded-lg bg-[#0f3d63] text-white shadow-sm">
-        <BrandLogo className="h-9 w-10" />
-      </span>
-      <span className="leading-none">
-        <span className="block text-[17px] font-bold tracking-[0.14em] text-[#0f3d63]">
-          NIRIKSHAN
-        </span>
-        {!compact && (
-          <span className="mt-1 block text-[9px] font-medium uppercase tracking-[0.18em] text-slate-500">
-            Compliance intelligence
-          </span>
-        )}
-      </span>
+    <a className="flex items-center" href="#home" aria-label="NIRIKSHAN home">
+      <LogoLockup compact={compact} />
     </a>
   );
 }

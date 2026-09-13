@@ -15,7 +15,7 @@ import {
 
 import { supabase } from "@/lib/supabaseClient";
 import BrandLogo from "@/components/brand-logo";
-import MinistryLogo from "@/components/ministry-logo";
+import LogoLockup from "@/components/logo-lockup";
 
 const roleLabels = {
   inspector: "Inspector Dashboard",
@@ -25,17 +25,8 @@ const roleLabels = {
 
 function Logo() {
   return (
-    <Link href="/" className="inline-flex items-center gap-3" aria-label="NIRIKSHAN home">
-      <MinistryLogo className="h-10 w-10" />
-      <span className="flex size-11 items-center justify-center rounded-lg bg-[#0f3d63] text-white shadow-sm">
-        <BrandLogo className="h-10 w-11" />
-      </span>
-      <span className="text-left leading-none">
-        <span className="block text-lg font-bold tracking-[0.14em] text-[#0f3d63]">NIRIKSHAN</span>
-        <span className="mt-1 block text-[9px] font-medium uppercase tracking-[0.18em] text-slate-500">
-          Compliance intelligence
-        </span>
-      </span>
+    <Link href="/" className="inline-flex items-center" aria-label="NIRIKSHAN home">
+      <LogoLockup />
     </Link>
   );
 }

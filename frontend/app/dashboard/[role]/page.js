@@ -28,7 +28,7 @@ import {
   X,
 } from "lucide-react";
 import BrandLogo from "@/components/brand-logo";
-import MinistryLogo from "@/components/ministry-logo";
+import LogoLockup from "@/components/logo-lockup";
 import {
   Bar,
   BarChart,
@@ -274,7 +274,7 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-[#f4f8fa] text-slate-800">
       <aside className={`fixed inset-y-0 left-0 z-30 flex w-64 flex-col bg-[#0b304d] text-white transition-transform lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
-        <div className="flex h-[76px] items-center gap-3 border-b border-white/10 px-6"><MinistryLogo className="h-9 w-9" /><span className="flex size-9 items-center justify-center rounded-lg bg-white/10"><BrandLogo className="h-8 w-9" /></span><span className="text-lg font-bold tracking-[0.14em]">NIRIKSHA</span><button className="ml-auto lg:hidden" onClick={() => setSidebarOpen(false)}><X size={20} /></button></div>
+        <div className="flex h-[76px] items-center border-b border-white/10 px-6"><LogoLockup compact dark /><button className="ml-auto lg:hidden" onClick={() => setSidebarOpen(false)}><X size={20} /></button></div>
         <div className="px-4 pt-7"><p className="px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-blue-100/45">Workspace</p><nav className="mt-3 space-y-1">{navItems.map(([label, active]) => { const Icon = iconMap[label]; const href = label === "Dashboard" ? `/dashboard/${role}` : label === "Product Repository" ? "/dashboard/products" : label === "New Inspection" ? "/dashboard/inspector/new-inspection" : label === "Risk Intelligence" ? "/dashboard/risk-intelligence" : label === "Inspection History" ? "/dashboard/inspector/history" : label === "Rule Engine Config" ? "/dashboard/administrator/rules" : label === "User Management" ? "/dashboard/administrator/users" : null; return href ? <Link href={href} key={label} className={`flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium transition ${active && label === "Dashboard" ? "bg-white/10 text-white" : "text-blue-100/65 hover:bg-white/5 hover:text-white"}`}><Icon size={17} />{label}</Link> : <button key={label} className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium text-blue-100/65 hover:bg-white/5 hover:text-white"><Icon size={17} />{label}</button>; })}</nav></div>
         <div className="mt-auto border-t border-white/10 p-4"><button className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-blue-100/65 hover:bg-white/5 hover:text-white"><LogOut size={17} /> Logout</button><p className="mt-5 px-3 text-[10px] leading-4 text-blue-100/35">Smart India Hackathon<br />Internal prototype</p></div>
       </aside>
