@@ -59,7 +59,7 @@ async def get_current_user(
     try:
         profile_response = (
             supabase.table("profiles")
-            .select("id, role, region")
+            .select("id, role, region, status")
             .eq("id", user_id)
             .maybe_single()
             .execute()
@@ -73,6 +73,12 @@ async def get_current_user(
     profile = profile_response.data
     if not profile:
         raise _unauthorized("No profile is associated with this user.")
+
+    if (profile.get("status") or "Active").casefold() == "inactive":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Your account has been deactivated. Contact your administrator.",
+        )
 
     role = profile.get("role")
     if not isinstance(role, str) or not role:

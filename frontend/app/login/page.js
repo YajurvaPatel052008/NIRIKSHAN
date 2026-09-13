@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   AlertCircle,
   ArrowLeft,
@@ -15,6 +15,7 @@ import {
 
 import { supabase } from "@/lib/supabaseClient";
 import BrandLogo from "@/components/brand-logo";
+import MinistryLogo from "@/components/ministry-logo";
 
 const roleLabels = {
   inspector: "Inspector Dashboard",
@@ -25,6 +26,7 @@ const roleLabels = {
 function Logo() {
   return (
     <Link href="/" className="inline-flex items-center gap-3" aria-label="NIRIKSHAN home">
+      <MinistryLogo className="h-10 w-10" />
       <span className="flex size-11 items-center justify-center rounded-lg bg-[#0f3d63] text-white shadow-sm">
         <BrandLogo className="h-10 w-11" />
       </span>
@@ -91,6 +93,12 @@ export default function LoginPage() {
   const [status, setStatus] = useState({ type: "", message: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  useEffect(() => {
+    if (window.location.search.includes("message=deactivated")) {
+      showError("Your account has been deactivated. Please contact your administrator.");
+    }
+  }, []);
+
   function showError(message) {
     setStatus({ type: "error", message });
   }
@@ -113,12 +121,19 @@ export default function LoginPage() {
 
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("role")
+      .select("role, status")
       .eq("id", data.user.id)
       .maybeSingle();
 
     if (profileError) {
       showError(profileError.message);
+      setIsSubmitting(false);
+      return;
+    }
+
+    if ((profile?.status || "Active").toLowerCase() === "inactive") {
+      await supabase.auth.signOut();
+      showError("Your account has been deactivated. Please contact your administrator.");
       setIsSubmitting(false);
       return;
     }
