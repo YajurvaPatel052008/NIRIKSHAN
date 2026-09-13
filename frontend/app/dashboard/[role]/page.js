@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   Activity,
   AlertTriangle,
@@ -213,7 +214,7 @@ function AdministratorView() {
       <div className="mb-6"><p className="text-sm text-slate-500">System overview</p><h1 className="text-2xl font-bold text-[#0f3d63]">Admin Dashboard</h1></div>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{stats.map((item) => <StatCard key={item[0]} item={item} />)}</div>
       <div className="mt-6 grid gap-5 lg:grid-cols-2">
-        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"><h2 className="text-base font-bold text-[#0f3d63]">Quick actions</h2><div className="mt-5 grid gap-3 sm:grid-cols-2"><button className="flex items-center gap-3 rounded-lg border border-slate-200 p-4 text-left hover:border-[#9ccddd] hover:bg-[#f6fbfc]"><SlidersHorizontal className="text-[#168cae]" size={21} /><span><b className="block text-sm text-[#0f3d63]">Rule Engine Config</b><small className="text-xs text-slate-400">Manage compliance rules</small></span></button><button className="flex items-center gap-3 rounded-lg border border-slate-200 p-4 text-left hover:border-[#9ccddd] hover:bg-[#f6fbfc]"><Users className="text-[#168cae]" size={21} /><span><b className="block text-sm text-[#0f3d63]">User Management</b><small className="text-xs text-slate-400">Manage officer access</small></span></button></div></section>
+        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"><h2 className="text-base font-bold text-[#0f3d63]">Quick actions</h2><div className="mt-5 grid gap-3 sm:grid-cols-2"><Link href="/dashboard/administrator/rules" className="flex items-center gap-3 rounded-lg border border-slate-200 p-4 text-left hover:border-[#9ccddd] hover:bg-[#f6fbfc]"><SlidersHorizontal className="text-[#168cae]" size={21} /><span><b className="block text-sm text-[#0f3d63]">Rule Engine Config</b><small className="text-xs text-slate-400">Manage compliance rules</small></span></Link><Link href="/dashboard/administrator/users" className="flex items-center gap-3 rounded-lg border border-slate-200 p-4 text-left hover:border-[#9ccddd] hover:bg-[#f6fbfc]"><Users className="text-[#168cae]" size={21} /><span><b className="block text-sm text-[#0f3d63]">User Management</b><small className="text-xs text-slate-400">Manage officer access</small></span></Link></div></section>
         <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"><h2 className="text-base font-bold text-[#0f3d63]">System status</h2><div className="mt-5 space-y-4"><div className="flex items-center justify-between text-sm"><span className="text-slate-500">API / Railway</span><span className="flex items-center gap-2 font-semibold text-emerald-600"><i className="size-2 rounded-full bg-emerald-500" />Operational</span></div><div className="flex items-center justify-between text-sm"><span className="text-slate-500">Supabase Database</span><span className="flex items-center gap-2 font-semibold text-emerald-600"><i className="size-2 rounded-full bg-emerald-500" />Operational</span></div><div className="flex items-center justify-between text-sm"><span className="text-slate-500">AI Services</span><span className="flex items-center gap-2 font-semibold text-emerald-600"><i className="size-2 rounded-full bg-emerald-500" />Operational</span></div></div></section>
       </div>
       <section className="mt-5 rounded-xl border border-slate-200 bg-white shadow-sm"><div className="border-b border-slate-100 p-5"><h2 className="text-base font-bold text-[#0f3d63]">Recent system audit log</h2></div><Table columns={["Action", "User", "Timestamp"]} rows={auditLog} renderRow={(row) => <><td className="px-4 py-4 font-semibold text-slate-700">{row[0]}</td><td className="px-4 py-4 text-slate-600">{row[1]}</td><td className="px-4 py-4 text-slate-500">{row[2]}</td></>} /></section>
@@ -227,17 +228,8 @@ export default function DashboardPage() {
   const requestedRole = roleRoutes.includes(params.role) ? params.role : "inspector";
   const [role, setRole] = useState(requestedRole);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [apiConnected, setApiConnected] = useState(false);
   const [officer, setOfficer] = useState({ name: "", role: "" });
   const meta = roleMeta[role];
-
-  useEffect(() => {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-    if (!apiUrl) return;
-    fetch(`${apiUrl}/api/dashboard/${requestedRole}`)
-      .then((response) => setApiConnected(response.ok))
-      .catch(() => setApiConnected(false));
-  }, [requestedRole]);
 
   useEffect(() => {
     let mounted = true;
@@ -290,7 +282,7 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-[#f4f8fa] text-slate-800">
       <aside className={`fixed inset-y-0 left-0 z-30 flex w-64 flex-col bg-[#0b304d] text-white transition-transform lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
         <div className="flex h-[76px] items-center gap-3 border-b border-white/10 px-6"><span className="flex size-9 items-center justify-center rounded-lg bg-white/10">                <BrandLogo className="h-8 w-9" /></span><span className="text-lg font-bold tracking-[0.14em]">NIRIKSHA</span><button className="ml-auto lg:hidden" onClick={() => setSidebarOpen(false)}><X size={20} /></button></div>
-        <div className="px-4 pt-7"><p className="px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-blue-100/45">Workspace</p><nav className="mt-3 space-y-1">{navItems.map(([label, active]) => { const Icon = iconMap[label]; const href = label === "Product Repository" ? "/dashboard/products" : label === "New Inspection" ? "/dashboard/inspector/new-inspection" : label === "Risk Intelligence" ? "/dashboard/risk-intelligence" : label === "Inspection History" ? "/dashboard/inspector/history" : null; return href ? <a href={href} key={label} className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium text-blue-100/65 transition hover:bg-white/5 hover:text-white"><Icon size={17} />{label}</a> : <button key={label} className={`flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium transition ${active && label === "Dashboard" ? "bg-white/10 text-white" : "text-blue-100/65 hover:bg-white/5 hover:text-white"}`}><Icon size={17} />{label}</button>; })}</nav></div>
+        <div className="px-4 pt-7"><p className="px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-blue-100/45">Workspace</p><nav className="mt-3 space-y-1">{navItems.map(([label, active]) => { const Icon = iconMap[label]; const href = label === "Dashboard" ? `/dashboard/${role}` : label === "Product Repository" ? "/dashboard/products" : label === "New Inspection" ? "/dashboard/inspector/new-inspection" : label === "Risk Intelligence" ? "/dashboard/risk-intelligence" : label === "Inspection History" ? "/dashboard/inspector/history" : label === "Rule Engine Config" ? "/dashboard/administrator/rules" : label === "User Management" ? "/dashboard/administrator/users" : null; return href ? <Link href={href} key={label} className={`flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium transition ${active && label === "Dashboard" ? "bg-white/10 text-white" : "text-blue-100/65 hover:bg-white/5 hover:text-white"}`}><Icon size={17} />{label}</Link> : <button key={label} className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium text-blue-100/65 hover:bg-white/5 hover:text-white"><Icon size={17} />{label}</button>; })}</nav></div>
         <div className="mt-auto border-t border-white/10 p-4"><button className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-blue-100/65 hover:bg-white/5 hover:text-white"><LogOut size={17} /> Logout</button><p className="mt-5 px-3 text-[10px] leading-4 text-blue-100/35">Smart India Hackathon<br />Internal prototype</p></div>
       </aside>
       {sidebarOpen && <button aria-label="Close sidebar" className="fixed inset-0 z-20 bg-[#061b2c]/50 lg:hidden" onClick={() => setSidebarOpen(false)} />}
