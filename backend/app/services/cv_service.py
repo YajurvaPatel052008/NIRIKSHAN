@@ -18,6 +18,7 @@ MIN_BRIGHTNESS = 35.0
 MAX_BRIGHTNESS = 220.0
 MIN_BLUR_SCORE = 100.0
 MAX_DIMENSION = 1600
+MAX_PROCESSING_DIMENSION = 1200
 
 
 def load_image(path_or_bytes: ImageInput) -> np.ndarray:
@@ -64,6 +65,15 @@ def check_quality(image: np.ndarray) -> dict[str, bool | float]:
 def enhance_image(image: np.ndarray) -> np.ndarray:
     """Denoise, improve local contrast, and cap the image's largest dimension."""
     image = load_image(image)
+    height, width = image.shape[:2]
+    largest_dimension = max(height, width)
+    if largest_dimension > MAX_PROCESSING_DIMENSION:
+        scale = MAX_PROCESSING_DIMENSION / largest_dimension
+        image = cv2.resize(
+            image,
+            (max(1, round(width * scale)), max(1, round(height * scale))),
+            interpolation=cv2.INTER_AREA,
+        )
     denoised = cv2.fastNlMeansDenoisingColored(image, None, 5, 5, 7, 21)
     lab = cv2.cvtColor(denoised, cv2.COLOR_BGR2LAB)
     lightness, a_channel, b_channel = cv2.split(lab)

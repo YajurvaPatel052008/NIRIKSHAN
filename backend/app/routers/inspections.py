@@ -1,3 +1,4 @@
+import gc
 import logging
 from uuid import uuid4
 
@@ -441,6 +442,8 @@ def analyze_inspection(
     inspection_id: str,
     user: CurrentUser = Depends(get_current_user),
 ):
+    # Keep image processing below Railway's memory limit: resize early and
+    # explicitly release large intermediates between OCR pipeline stages.
     del user
     if supabase is None:
         raise HTTPException(
@@ -487,6 +490,8 @@ def analyze_inspection(
         )
         current_stage = "checking image quality"
         image = cv_service.load_image(image_bytes)
+        del image_bytes
+        gc.collect()
         quality = cv_service.check_quality(image)
         if not quality["overall_pass"]:
             _update_inspection_status(
@@ -505,11 +510,16 @@ def analyze_inspection(
         _update_inspection_status(inspection_id, "Processing")
         processing_started = True
         current_stage = "enhancing image"
-        processed_image = cv_service.correct_perspective(
-            cv_service.enhance_image(image)
-        )
+        enhanced_image = cv_service.enhance_image(image)
+        del image
+        gc.collect()
+        current_stage = "correcting perspective"
+        processed_image = cv_service.correct_perspective(enhanced_image)
+        del enhanced_image
+        gc.collect()
         current_stage = "extracting text with PaddleOCR"
         raw_ocr_lines = ocr_service.extract_text(processed_image)
+        gc.collect()
         if not raw_ocr_lines:
             _update_inspection_status(
                 inspection_id,
@@ -525,6 +535,8 @@ def analyze_inspection(
             raw_ocr_lines,
             inspection["category"],
         )
+        del raw_ocr_lines
+        gc.collect()
 
         current_stage = "saving declarations"
         supabase.table("extracted_declarations").delete().eq(
