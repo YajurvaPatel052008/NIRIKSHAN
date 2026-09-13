@@ -249,7 +249,7 @@ export default function DashboardPage() {
         const profileRole = profile?.role || "";
         setOfficer({
           name: profile?.full_name || authData.user.user_metadata?.full_name || authData.user.email?.split("@")[0] || "",
-          role: profileRole.toLowerCase() === "admin" ? "administrator" : profileRole.toLowerCase(),
+          role: ["admin", "administrator"].includes(profileRole.toLowerCase()) ? "administrator" : profileRole.toLowerCase(),
         });
       }
     }

@@ -104,8 +104,14 @@ def require_role(*allowed_roles: str) -> Callable:
     async def role_dependency(
         user: CurrentUser = Depends(get_current_user),
     ) -> CurrentUser:
-        normalized_roles = {role.casefold() for role in allowed_roles}
-        if user.role.casefold() not in normalized_roles:
+        normalized_roles = {
+            "admin" if role.casefold() == "administrator" else role.casefold()
+            for role in allowed_roles
+        }
+        current_role = user.role.casefold()
+        if current_role == "administrator":
+            current_role = "admin"
+        if current_role not in normalized_roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You do not have permission to access this resource.",

@@ -124,10 +124,11 @@ export default function LoginPage() {
 
     if (!profile) {
       const metadataRole = data.user.user_metadata?.role;
+      const normalizedMetadataRole = metadataRole?.toLowerCase();
       const recoveryRole =
-        metadataRole === "Admin"
+        ["admin", "administrator"].includes(normalizedMetadataRole)
           ? "administrator"
-          : metadataRole === "Supervisor"
+          : normalizedMetadataRole === "supervisor"
             ? "supervisor"
             : "inspector";
       const { error: recoveryError } = await supabase.from("profiles").insert({
@@ -153,6 +154,7 @@ export default function LoginPage() {
       inspector: "inspector",
       supervisor: "supervisor",
       admin: "administrator",
+      administrator: "administrator",
     }[profile.role?.toLowerCase()] || "inspector";
     router.push(`/dashboard/${dashboardRole}`);
   }
