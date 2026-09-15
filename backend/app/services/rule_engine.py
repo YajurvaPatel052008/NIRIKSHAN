@@ -14,6 +14,25 @@ logger = logging.getLogger(__name__)
 _MRP_PATTERN = re.compile(r"^\s*₹\s*\d+(?:\.\d{1,2})?\s*$")
 _MONTH_YEAR_PATTERN = re.compile(r"^(0[1-9]|1[0-2])/\d{4}$")
 
+_DECLARATION_TYPE_ALIASES = {
+    "manufacturer": "manufacturer/packer/importer name & address",
+    "manufacturer/packer/importer name & address": "manufacturer/packer/importer name & address",
+    "consumer care": "consumer care details",
+    "consumer care details": "consumer care details",
+    "mfg date": "month & year of manufacture/packing",
+    "month & year of manufacture/packing": "month & year of manufacture/packing",
+    "net quantity": "net quantity",
+    "mrp": "mrp",
+    "country of origin": "country of origin",
+}
+
+_UNSUPPORTED_DECLARATION_TYPES = {"common or generic name", "common name"}
+
+
+def _canonical_declaration_type(value: Any) -> str:
+    normalized = " ".join(str(value or "").split()).casefold()
+    return _DECLARATION_TYPE_ALIASES.get(normalized, normalized)
+
 
 def get_applicable_rules(category: str) -> list[dict]:
     """Fetch active rules for a category and the global ``All`` category."""
@@ -34,9 +53,9 @@ def get_applicable_rules(category: str) -> list[dict]:
 
 
 def _declaration_for_type(declarations: list[dict], declaration_type: str) -> dict | None:
-    expected = declaration_type.casefold()
+    expected = _canonical_declaration_type(declaration_type)
     for declaration in declarations:
-        actual = str(declaration.get("declaration_type", "")).casefold()
+        actual = _canonical_declaration_type(declaration.get("declaration_type"))
         if actual == expected:
             return declaration
     return None
@@ -115,6 +134,12 @@ def validate_declarations(declarations: list[dict], rules: list[dict]) -> list[d
     violations = []
     for rule in rules:
         declaration_type = str(rule.get("declaration_type", ""))
+        if _canonical_declaration_type(declaration_type) in _UNSUPPORTED_DECLARATION_TYPES:
+            logger.warning(
+                "Skipping unsupported declaration rule %r; classifier supports the configured six declaration types",
+                declaration_type,
+            )
+            continue
         declaration = _declaration_for_type(declarations, declaration_type)
         validation_type = str(rule.get("validation_type", "")).casefold()
 
