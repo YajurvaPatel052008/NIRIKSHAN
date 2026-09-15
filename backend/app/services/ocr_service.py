@@ -21,7 +21,7 @@ OCR_ENGINE = PaddleOCR(
     use_angle_cls=False,
     lang="en",
     use_mkldnn=False,
-    det_limit_side_len=960,
+    det_limit_side_len=1536,
 )
 
 
@@ -75,7 +75,13 @@ def extract_text(image: np.ndarray) -> list[dict]:
         raw_results = OCR_ENGINE.ocr(image)
         if not raw_results:
             return []
-        return _read_v2_result(raw_results[0])
+        detections = _read_v2_result(raw_results[0])
+        logger.info(
+            "PaddleOCR detected %d text regions; raw extracted text=%r",
+            len(detections),
+            "\n".join(item["text"] for item in detections),
+        )
+        return detections
     except (RuntimeError, TypeError, ValueError, AttributeError) as exc:
         logger.exception("PaddleOCR failed to process image: %s", exc)
         return []

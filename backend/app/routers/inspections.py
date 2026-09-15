@@ -581,6 +581,12 @@ def analyze_inspection(
         gc.collect()
         current_stage = "extracting text with PaddleOCR"
         raw_ocr_lines = ocr_service.extract_text(processed_image)
+        logger.info(
+            "Inspection %s OCR summary: regions=%d text=%r",
+            inspection_id,
+            len(raw_ocr_lines),
+            "\n".join(line.get("text", "") for line in raw_ocr_lines),
+        )
         gc.collect()
         if not raw_ocr_lines:
             _update_inspection_status(

@@ -66,6 +66,10 @@ canonical declaration type. This reference is expanded from real labels over tim
 {terminology}
 
 Normalization rules:
+- The normalized_value for MRP must ALWAYS begin with the ₹ symbol, regardless
+  of whether ₹ was visible in OCR. If a numeric price has no currency symbol,
+  prefix it with ₹ because MRP on Indian packaged goods is always in rupees.
+  For example, raw OCR "10.00" or "Rs 10.00" becomes normalized_value "₹10.00".
 - Strip "/-" from MRP values: "₹2499.00/-" becomes "₹2499.00".
 - Convert a full month and year such as "June 2026" to "06/2026".
 - For combined manufacturer, packer, importer, or marketer headings, capture
@@ -152,7 +156,14 @@ def classify_declarations(raw_ocr_lines: list[dict], category: str) -> list[dict
             len(cleaned_content),
             cleaned_content[-100:],
         )
-        parsed: Any = json.loads(cleaned_content)
+        try:
+            parsed: Any = json.loads(cleaned_content)
+        except json.JSONDecodeError:
+            parsed = None
+        response_count = len(parsed) if isinstance(parsed, list) else 0
+        logger.info("Groq classification returned %d declarations", response_count)
+        if parsed is None:
+            raise json.JSONDecodeError("Invalid Groq JSON", cleaned_content, 0)
         if not isinstance(parsed, list):
             logger.error("Groq classification response was not a JSON array")
             return []
