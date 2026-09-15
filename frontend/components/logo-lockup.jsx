@@ -3,13 +3,13 @@ import MinistryLogo from "@/components/ministry-logo";
 
 export default function LogoLockup({ compact = false, dark = false }) {
   return (
-    <span className="flex items-center gap-3">
-      <MinistryLogo className="h-10 w-auto shrink-0" />
-      <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${dark ? "bg-white/10" : "bg-[#0f3d63]"} shadow-sm`}>
-        <BrandLogo className="h-9 w-auto" />
+    <span className={`flex min-w-0 items-center ${compact ? "gap-2" : "gap-3"}`}>
+      <MinistryLogo className={`${compact ? "h-7" : "h-10"} w-auto shrink-0`} />
+      <span className={`flex ${compact ? "h-7 w-7 rounded-md" : "h-10 w-10 rounded-lg"} shrink-0 items-center justify-center ${dark ? "bg-white/10" : "bg-[#0f3d63]"} shadow-sm`}>
+        <BrandLogo className={`${compact ? "h-6" : "h-9"} w-auto`} />
       </span>
-      <span className="leading-none">
-        <span className={`block text-[17px] font-bold tracking-[0.14em] ${dark ? "text-white" : "text-[#0f3d63]"}`}>
+      <span className="min-w-0 leading-none">
+        <span className={`block whitespace-nowrap ${compact ? "text-[13px] tracking-[0.08em]" : "text-[17px] tracking-[0.14em]"} font-bold ${dark ? "text-white" : "text-[#0f3d63]"}`}>
           NIRIKSHAN
         </span>
         {!compact && (
