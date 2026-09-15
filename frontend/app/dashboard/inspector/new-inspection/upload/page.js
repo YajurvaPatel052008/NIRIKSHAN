@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "../../../../../lib/supabaseClient";
 import {
   ArrowLeft,
@@ -32,11 +33,13 @@ function DemoLabel() {
 }
 
 export default function ImageUploadPage() {
+  const router = useRouter();
   const inputRef = useRef(null);
   const cameraRef = useRef(null);
   const [image, setImage] = useState(null);
   const [checksComplete, setChecksComplete] = useState([]);
   const [isChecking, setIsChecking] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -80,6 +83,8 @@ export default function ImageUploadPage() {
 
   async function proceedToAnalysis(event) {
     event.preventDefault();
+    if (isUploading) return;
+    setError("");
     const inspectionId = new URLSearchParams(window.location.search).get("inspectionId");
     const apiUrl = process.env.NEXT_PUBLIC_API_URL;
     if (!inspectionId || inspectionId === "local-draft") {
@@ -90,8 +95,10 @@ export default function ImageUploadPage() {
       setError("Select an image and make sure the inspection service is configured.");
       return;
     }
+    setIsUploading(true);
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) throw sessionError;
       const token = sessionData?.session?.access_token;
       if (!token) throw new Error("Your session has expired. Please sign in again.");
       const formData = new FormData();
@@ -112,9 +119,11 @@ export default function ImageUploadPage() {
         throw new Error(detail);
       }
       window.sessionStorage.setItem("niriksha-inspection-id", inspectionId);
-      window.location.href = `/dashboard/inspector/new-inspection/analysis?inspectionId=${encodeURIComponent(inspectionId)}`;
+      router.push(`/dashboard/inspector/new-inspection/analysis?inspectionId=${encodeURIComponent(inspectionId)}`);
     } catch (uploadError) {
-      setError(uploadError.message);
+      setError(uploadError.message || "Unable to upload the inspection image. Please try again.");
+    } finally {
+      setIsUploading(false);
     }
   }
 
@@ -145,7 +154,7 @@ export default function ImageUploadPage() {
             </div>
           )}
           {error && <p className="mt-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
-          <div className="mt-8 flex flex-col-reverse justify-between gap-3 border-t border-slate-200 pt-6 sm:flex-row"><Link href="/dashboard/inspector/new-inspection" className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-slate-300 px-5 text-sm font-bold text-slate-600 hover:bg-white"><ArrowLeft size={16} /> Back</Link><div className="flex flex-col gap-3 sm:flex-row"><button type="button" onClick={retake} disabled={!image} className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-[#9ccddd] px-5 text-sm font-bold text-[#0f6584] hover:bg-[#edf7fb] disabled:cursor-not-allowed disabled:opacity-40"><RefreshCw size={16} /> Retake</button>          <button type="button" onClick={proceedToAnalysis} disabled={!qualityGood} className={`inline-flex h-11 items-center justify-center gap-2 rounded-md px-5 text-sm font-bold text-white ${qualityGood ? "bg-[#0f3d63] hover:bg-[#0b2e4b]" : "cursor-not-allowed bg-slate-300"}`}>Proceed to AI Analysis <ArrowRight size={17} /></button></div></div>
+          <div className="mt-8 flex flex-col-reverse justify-between gap-3 border-t border-slate-200 pt-6 sm:flex-row"><Link href="/dashboard/inspector/new-inspection" className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-slate-300 px-5 text-sm font-bold text-slate-600 hover:bg-white"><ArrowLeft size={16} /> Back</Link><div className="flex flex-col gap-3 sm:flex-row"><button type="button" onClick={retake} disabled={!image || isUploading} className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-[#9ccddd] px-5 text-sm font-bold text-[#0f6584] hover:bg-[#edf7fb] disabled:cursor-not-allowed disabled:opacity-40"><RefreshCw size={16} /> Retake</button>          <button type="button" onClick={proceedToAnalysis} disabled={!qualityGood || isUploading} className={`inline-flex h-11 items-center justify-center gap-2 rounded-md px-5 text-sm font-bold text-white ${qualityGood && !isUploading ? "bg-[#0f3d63] hover:bg-[#0b2e4b]" : "cursor-not-allowed bg-slate-300"}`}>{isUploading ? <><LoaderCircle size={17} className="animate-spin" /> Uploading image...</> : <>Proceed to AI Analysis <ArrowRight size={17} /></>}</button></div></div>
         </main>
       </div>
     </div>
