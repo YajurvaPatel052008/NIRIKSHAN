@@ -346,6 +346,20 @@ def get_inspection(
     if not inspection:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Inspection was not found.")
 
+    images = _fetch_related_rows("inspection_images", inspection_id)
+    for image in images:
+        storage_path = image.get("storage_path")
+        if not storage_path:
+            continue
+        try:
+            signed_url = _require_supabase().storage.from_("inspection-images").create_signed_url(
+                storage_path,
+                3600,
+            )
+            image["url"] = signed_url.get("signedURL") or signed_url.get("signed_url")
+        except Exception:
+            logger.warning("Unable to create signed URL for inspection image %s", image.get("id"))
+
     return {
         "inspection": {
             **inspection,
@@ -353,7 +367,7 @@ def get_inspection(
         },
         "declarations": _fetch_related_rows("extracted_declarations", inspection_id),
         "violations": _fetch_related_rows("violations", inspection_id),
-        "images": _fetch_related_rows("inspection_images", inspection_id),
+        "images": images,
     }
 
 
