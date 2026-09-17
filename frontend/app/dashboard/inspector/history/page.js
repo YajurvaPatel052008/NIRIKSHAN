@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, Eye, FileText, History, LoaderCircle, Search } from "lucide-react";
 import BrandLogo from "@/components/brand-logo";
 import { supabase } from "@/lib/supabaseClient";
+import { getApiUrl } from "@/lib/api";
 
 const statusStyles = {
   Compliant: "bg-emerald-50 text-emerald-700 ring-emerald-200",
@@ -38,12 +39,14 @@ export default function InspectionHistoryPage() {
         const productId = new URLSearchParams(window.location.search).get("productId");
         if (productId) params.set("product_id", productId);
         if (search.trim()) params.set("search", search.trim());
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/inspections?${params}`, {
+        const response = await fetch(`${getApiUrl()}/inspections?${params}`, {
           headers: { Authorization: `Bearer ${token}` },
           signal: controller.signal,
         });
-        const payload = await response.json();
-        if (!response.ok) throw new Error(payload.detail || "Unable to load inspection history.");
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(payload.detail || `Unable to load inspection history (HTTP ${response.status}).`);
+        }
         const items = payload.items || [];
         setInspections(items);
         setSummary({

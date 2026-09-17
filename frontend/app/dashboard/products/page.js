@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import BrandLogo from "@/components/brand-logo";
 import { supabase } from "@/lib/supabaseClient";
+import { getApiUrl } from "@/lib/api";
 
 const categories = ["All categories", "Food & Beverages", "Cosmetics", "Household", "Electronics", "Pharmaceuticals"];
 const statuses = ["All statuses", "Compliant", "Violation", "Pending"];
@@ -55,12 +56,14 @@ export default function ProductRepositoryPage() {
           const from = new Date(Date.now() - days * 86400000);
           params.set("date_from", from.toISOString().slice(0, 10));
         }
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products?${params}`, {
+        const response = await fetch(`${getApiUrl()}/products?${params}`, {
           headers: { Authorization: `Bearer ${token}` },
           signal: controller.signal,
         });
-        const payload = await response.json();
-        if (!response.ok) throw new Error(payload.detail || "Unable to load products.");
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(payload.detail || `Unable to load products (HTTP ${response.status}).`);
+        }
         setProducts((payload.items || []).map((product) => [
           product.id,
           product.name,
