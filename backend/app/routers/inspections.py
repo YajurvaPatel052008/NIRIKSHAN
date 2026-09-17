@@ -53,7 +53,11 @@ def _signed_image_url(storage_path: str | None) -> str | None:
             storage_path,
             3600,
         )
-        return response.get("signedURL") or response.get("signed_url")
+        return (
+            response.get("signedURL")
+            or response.get("signedUrl")
+            or response.get("signed_url")
+        )
     except Exception:
         logger.warning("Unable to create signed URL for inspection image %s", storage_path)
         return None
@@ -364,6 +368,11 @@ def get_inspection(
     for image in images:
         image["url"] = _signed_image_url(image.get("storage_path"))
     latest_image = max(images, key=lambda item: item.get("uploaded_at") or "") if images else None
+    violations = _fetch_related_rows("violations", inspection_id)
+    for violation in violations:
+        violation["evidence_image_url"] = _signed_image_url(
+            violation.get("evidence_image_path")
+        )
 
     return {
         "inspection": {
@@ -371,7 +380,7 @@ def get_inspection(
             "inspector_name": _inspector_name(inspection.get("inspector_id")),
         },
         "declarations": _fetch_related_rows("extracted_declarations", inspection_id),
-        "violations": _fetch_related_rows("violations", inspection_id),
+        "violations": violations,
         "images": images,
         "image_url": latest_image.get("url") if latest_image else None,
     }
@@ -722,6 +731,10 @@ def analyze_inspection(
             compliance_status=compliance["compliance_status"],
         )
         image_url = _signed_image_url(inspection_image.get("storage_path"))
+        for violation in evidence_violations:
+            violation["evidence_image_url"] = _signed_image_url(
+                violation.get("evidence_image_path")
+            )
         return {
             "declarations": declarations,
             "violations": evidence_violations,
