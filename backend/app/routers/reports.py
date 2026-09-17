@@ -8,6 +8,7 @@ from app.supabase_client import supabase
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+REPORT_BUCKET = "inspection-reports"
 
 
 def _signed_url(response: dict) -> str | None:
@@ -43,7 +44,7 @@ def generate_inspection_report(
     try:
         pdf_bytes = generate_pdf(inspection_id)
         storage_path = f"reports/{inspection_id}.pdf"
-        client.storage.from_("inspection-images").upload(
+        client.storage.from_(REPORT_BUCKET).upload(
             storage_path,
             pdf_bytes,
             {"content-type": "application/pdf", "upsert": "true"},
@@ -58,7 +59,7 @@ def generate_inspection_report(
             )
             .execute()
         )
-        signed_url = client.storage.from_("inspection-images").create_signed_url(
+        signed_url = client.storage.from_(REPORT_BUCKET).create_signed_url(
             storage_path,
             3600,
         )
@@ -105,7 +106,7 @@ def get_latest_inspection_report(
                 detail="No generated report exists for this inspection.",
             )
         report = response.data[0]
-        signed_url = client.storage.from_("inspection-images").create_signed_url(
+        signed_url = client.storage.from_(REPORT_BUCKET).create_signed_url(
             report["pdf_storage_path"],
             3600,
         )
