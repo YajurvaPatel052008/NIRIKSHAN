@@ -46,7 +46,7 @@ export default function VerificationPage() {
         id: item.id,
         label: item.declaration_type,
         value: item.normalized_value || item.extracted_value || "Not detected",
-        confidence: Math.round((item.confidence_score || 0) * 100),
+        confidence: Math.round(item.confidence_score > 1 ? item.confidence_score : (item.confidence_score || 0) * 100),
         reason: "",
         correction: "",
       })));
