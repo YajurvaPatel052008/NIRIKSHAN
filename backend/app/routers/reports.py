@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.auth import CurrentUser, get_current_user
@@ -5,6 +7,16 @@ from app.services.report_service import generate_pdf
 from app.supabase_client import supabase
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
+
+
+def _signed_url(response: dict) -> str | None:
+    return (
+        response.get("signedURL")
+        or response.get("signedUrl")
+        or response.get("signed_url")
+        or response.get("url")
+    )
 
 
 def _client():
@@ -50,11 +62,15 @@ def generate_inspection_report(
             storage_path,
             3600,
         )
+        report_url = _signed_url(signed_url)
+        if not report_url:
+            raise RuntimeError("Supabase did not return a signed URL for the generated report.")
     except LookupError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     except HTTPException:
         raise
     except Exception as exc:
+        logger.exception("Unable to generate report for inspection %s", inspection_id)
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Unable to generate or store the inspection report.",
@@ -63,7 +79,7 @@ def generate_inspection_report(
     return {
         "id": report_response.data[0]["id"] if report_response.data else None,
         "storage_path": storage_path,
-        "url": signed_url.get("signedURL") or signed_url.get("signed_url"),
+        "url": report_url,
     }
 
 
@@ -104,6 +120,6 @@ def get_latest_inspection_report(
     return {
         "id": report.get("id"),
         "storage_path": report["pdf_storage_path"],
-        "url": signed_url.get("signedURL") or signed_url.get("signed_url"),
+        "url": _signed_url(signed_url),
         "generated_at": report.get("generated_at"),
     }
