@@ -45,6 +45,20 @@ def _require_supabase():
     return supabase
 
 
+def _signed_image_url(storage_path: str | None) -> str | None:
+    if not storage_path:
+        return None
+    try:
+        response = _require_supabase().storage.from_("inspection-images").create_signed_url(
+            storage_path,
+            3600,
+        )
+        return response.get("signedURL") or response.get("signed_url")
+    except Exception:
+        logger.warning("Unable to create signed URL for inspection image %s", storage_path)
+        return None
+
+
 def _fetch_related_rows(table_name: str, inspection_id: str) -> list[dict]:
     response = (
         _require_supabase()
@@ -348,17 +362,8 @@ def get_inspection(
 
     images = _fetch_related_rows("inspection_images", inspection_id)
     for image in images:
-        storage_path = image.get("storage_path")
-        if not storage_path:
-            continue
-        try:
-            signed_url = _require_supabase().storage.from_("inspection-images").create_signed_url(
-                storage_path,
-                3600,
-            )
-            image["url"] = signed_url.get("signedURL") or signed_url.get("signed_url")
-        except Exception:
-            logger.warning("Unable to create signed URL for inspection image %s", image.get("id"))
+        image["url"] = _signed_image_url(image.get("storage_path"))
+    latest_image = max(images, key=lambda item: item.get("uploaded_at") or "") if images else None
 
     return {
         "inspection": {
@@ -368,6 +373,7 @@ def get_inspection(
         "declarations": _fetch_related_rows("extracted_declarations", inspection_id),
         "violations": _fetch_related_rows("violations", inspection_id),
         "images": images,
+        "image_url": latest_image.get("url") if latest_image else None,
     }
 
 
@@ -715,11 +721,13 @@ def analyze_inspection(
             compliance_score=compliance["compliance_score"],
             compliance_status=compliance["compliance_status"],
         )
+        image_url = _signed_image_url(inspection_image.get("storage_path"))
         return {
             "declarations": declarations,
             "violations": evidence_violations,
             "compliance_score": compliance["compliance_score"],
             "compliance_status": compliance["compliance_status"],
+            "image_url": image_url,
         }
     except HTTPException:
         if processing_started:

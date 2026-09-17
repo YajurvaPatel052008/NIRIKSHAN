@@ -74,11 +74,9 @@ export default function CompliancePage() {
         if (!response.ok) throw new Error("Unable to load compliance results.");
         const result = await response.json();
         const inspection = result.inspection || {};
-        const latestImage = [...(result.images || [])]
-          .filter((image) => image.url || image.storage_path)
-          .sort((a, b) => new Date(b.uploaded_at || 0) - new Date(a.uploaded_at || 0))[0];
-        setEvidenceImage(latestImage || null);
-        setImageLoading(Boolean(latestImage?.url));
+        const imageUrl = result.image_url || result.images?.find((image) => image.url)?.url || "";
+        setEvidenceImage(imageUrl ? { url: imageUrl } : null);
+        setImageLoading(Boolean(imageUrl));
         setData({
           score: inspection.compliance_score ?? 0,
           status: inspection.compliance_status || "Awaiting analysis",
